@@ -5,4 +5,15 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "star-ls"
+path = "src/bin/main.rs"
+
 [dependencies]
+crossbeam-channel = "0.5.5"
+lsp-server = "0.6.0"
+lsp-types = "=0.93.2"
+salsa = { git = "https://github.com/salsa-rs/salsa", package = "salsa-2022" }
+serde_json = "1.0.86"
+serde = { version = "1.0.144", features = ["derive"] }
+rayon = "1.5.3"

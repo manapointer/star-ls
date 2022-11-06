@@ -1,14 +1,31 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use lsp_types::{ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind};
+
+mod db;
+mod errors;
+mod global_state;
+mod ide;
+mod main_loop;
+
+pub type Error = Box<dyn std::error::Error + Send + Sync>;
+pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+pub use main_loop::main_loop;
+
+#[salsa::input]
+pub(crate) struct Document {
+    text: String,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[salsa::jar(db = Db)]
+pub(crate) struct Jar(Document);
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+trait Db: salsa::DbWithJar<Jar> {}
+
+impl<DB> Db for DB where DB: ?Sized + salsa::DbWithJar<Jar> {}
+
+pub fn server_capabilities() -> ServerCapabilities {
+    ServerCapabilities {
+        text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
+        ..Default::default()
     }
 }

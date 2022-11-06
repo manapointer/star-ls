@@ -13,13 +13,10 @@ impl rowan::Language for StarlarkLanguage {
         unsafe { std::mem::transmute::<u16, SyntaxKind>(raw.0) }
     }
     fn kind_to_raw(kind: Self::Kind) -> rowan::SyntaxKind {
-        // 4 + + 3
         kind.into()
     }
 }
 
 pub type SyntaxNode = rowan::SyntaxNode<StarlarkLanguage>;
-
 pub type SyntaxToken = rowan::SyntaxToken<StarlarkLanguage>;
-
 pub type SyntaxElement = rowan::NodeOrToken<SyntaxNode, SyntaxToken>;
