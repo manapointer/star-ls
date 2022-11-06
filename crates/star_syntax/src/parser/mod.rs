@@ -2,12 +2,13 @@ use rowan::{Checkpoint, GreenNode, GreenNodeBuilder};
 
 use crate::{
     SyntaxKind::{self, *},
-    SyntaxNode, T,
+    SyntaxKindSet, SyntaxNode, T,
 };
 
 mod expressions;
 mod params;
 mod statements;
+mod suite;
 
 #[cfg(test)]
 mod tests;
@@ -15,6 +16,7 @@ mod tests;
 use expressions::*;
 use params::*;
 use statements::*;
+use suite::*;
 
 pub(crate) struct Parse {
     errors: Vec<(String, usize)>,
@@ -172,15 +174,11 @@ impl<'a> Parser<'a> {
 
 pub(crate) fn file(p: &mut Parser) {
     p.builder.start_node(FILE.into());
-
-    // Parse statements.
-    loop {
+    while !p.at(EOF) {
         match p.current() {
-            NEWLINE => p.bump(NEWLINE),
-            EOF => break,
+            T!['\n'] => p.bump(T!['\n']),
             _ => statement(p),
         }
     }
-
     p.builder.finish_node();
 }

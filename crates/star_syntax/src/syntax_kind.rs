@@ -126,11 +126,9 @@ pub enum SyntaxKind {
 pub(crate) struct SyntaxKindSet(u128);
 
 impl SyntaxKindSet {
-    pub const fn new() -> SyntaxKindSet {
-        SyntaxKindSet(0)
-    }
+    pub(crate) const EMPTY: SyntaxKindSet = SyntaxKindSet(0);
 
-    pub const fn from(kinds: &[SyntaxKind]) -> SyntaxKindSet {
+    pub(crate) const fn new(kinds: &[SyntaxKind]) -> SyntaxKindSet {
         let mut inner = 0;
         let mut i = 0;
         while i < kinds.len() {
@@ -140,8 +138,12 @@ impl SyntaxKindSet {
         SyntaxKindSet(inner)
     }
 
-    pub fn contains(&self, kind: SyntaxKind) -> bool {
+    pub(crate) const fn contains(&self, kind: SyntaxKind) -> bool {
         self.0 & 1 << kind as usize > 0
+    }
+
+    pub(crate) const fn union(&self, other: SyntaxKindSet) -> SyntaxKindSet {
+        SyntaxKindSet(self.0 | other.0)
     }
 }
 
@@ -155,6 +157,6 @@ impl From<SyntaxKind> for rowan::SyntaxKind {
 
 #[macro_export]
 macro_rules! T {
-    [;] => { $ crate :: SyntaxKind :: PLUS } ; [-] => { $ crate :: SyntaxKind :: MINUS } ; [*] => { $ crate :: SyntaxKind :: STAR } ; [/] => { $ crate :: SyntaxKind :: SLASH } ; [/] => { $ crate :: SyntaxKind :: SLASH } ; [whitespace] => { $ crate :: SyntaxKind :: WHITESPACE } ; [ident] => { $ crate :: SyntaxKind :: IDENT } ; [pass] => { $ crate :: SyntaxKind :: PASS_KW } ; [break] => { $ crate :: SyntaxKind :: BREAK_KW } ; [continue] => { $ crate :: SyntaxKind :: CONTINUE_KW } ; ['('] => { $ crate :: SyntaxKind :: L_PAREN } ; [')'] => { $ crate :: SyntaxKind :: R_PAREN } ; [:] => { $ crate :: SyntaxKind :: COLON } ; [def] => { $ crate :: SyntaxKind :: DEF_KW } ; [,] => { $ crate :: SyntaxKind :: COMMA } ;
+    [;] => { $ crate :: SyntaxKind :: PLUS } ; [-] => { $ crate :: SyntaxKind :: MINUS } ; [*] => { $ crate :: SyntaxKind :: STAR } ; [/] => { $ crate :: SyntaxKind :: SLASH } ; [/] => { $ crate :: SyntaxKind :: SLASH } ; [whitespace] => { $ crate :: SyntaxKind :: WHITESPACE } ; [ident] => { $ crate :: SyntaxKind :: IDENT } ; [pass] => { $ crate :: SyntaxKind :: PASS_KW } ; [break] => { $ crate :: SyntaxKind :: BREAK_KW } ; [continue] => { $ crate :: SyntaxKind :: CONTINUE_KW } ; ['('] => { $ crate :: SyntaxKind :: L_PAREN } ; ['['] => { $ crate :: SyntaxKind :: L_BRACK } ; ['{'] => { $ crate :: SyntaxKind :: L_BRACE } ; [')'] => { $ crate :: SyntaxKind :: R_PAREN } ; [:] => { $ crate :: SyntaxKind :: COLON } ; [def] => { $ crate :: SyntaxKind :: DEF_KW } ; [,] => { $ crate :: SyntaxKind :: COMMA } ; ['\n'] => { $ crate :: SyntaxKind :: NEWLINE } ; [return] => { $ crate :: SyntaxKind :: RETURN_KW } ; [load] => { $ crate :: SyntaxKind :: LOAD_KW } ; [if] => { $ crate :: SyntaxKind :: IF_KW } ; [lambda] => { $ crate :: SyntaxKind :: LAMBDA_KW } ; [not] => { $ crate :: SyntaxKind :: NOT_KW } ; [~] => { $ crate :: SyntaxKind :: TILDE } ; [+] => { $ crate :: SyntaxKind :: PLUS } ;
 }
 pub use T;
