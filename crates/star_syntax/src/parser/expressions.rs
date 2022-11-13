@@ -16,15 +16,22 @@ pub(crate) fn parse_assign_or_expression(p: &mut Parser) {
     let checkpoint = p.checkpoint();
 }
 
-pub(crate) fn parse_expression(p: &mut Parser) {
-    parse_base_expression(p);
+pub(crate) fn expression(p: &mut Parser) {
+    test(p);
 }
 
-pub(crate) fn parse_base_expression(p: &mut Parser) {
+pub(crate) fn test(p: &mut Parser) {
     match p.current() {
-        T![ident] => p.bump(IDENT),
-        INT => p.bump(INT),
-        STRING => p.bump(STRING),
-        _ => p.error("Expected expression"),
+        T![if] => todo!(),
+        T![lambda] => todo!(),
+        _ => {
+            p.error("Expected expression");
+            p.bump_any();
+        }
+        // T![ident] => p.bump(IDENT),
+        // INT => p.bump(INT),
+        // STRING => p.bump(STRING),
+        // _ => p.error("Expected expression"),
     }
 }
+pub(crate) fn atom_expr(p: &mut Parser) {}

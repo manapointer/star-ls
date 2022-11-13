@@ -15,8 +15,6 @@ enum Event {
     Task(Task),
 }
 
-// idea: bump consumes whitespace characters
-
 pub fn main_loop(connection: Connection) -> Result<()> {
     GlobalState::new(connection).run()
 }

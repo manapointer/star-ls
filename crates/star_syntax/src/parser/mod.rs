@@ -112,7 +112,10 @@ impl<'a> Parser<'a> {
         self.source_pos += 1;
     }
 
-    fn start_node_at(&mut self, kind: SyntaxKind, mark: SyntaxKind) {}
+    fn start_node_any(&mut self, kind: SyntaxKind) {
+        self.source_consume_whitespace();
+        self.builder.start_node(kind.into());
+    }
 
     // Finishes a node in the GreenNodeBuilder. Consumes all whitespace until seeing the specified SyntaxKind,
     // then consumes the SyntaxKind and finishes the node.

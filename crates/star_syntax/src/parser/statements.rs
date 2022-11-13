@@ -40,21 +40,36 @@ pub(crate) fn small_stmt(p: &mut Parser) {
         T![break] => break_stmt(p),
         T![continue] => continue_stmt(p),
         T![pass] => pass_stmt(p),
-        T![ident] => p.bump(T![ident]),
+
+        // T![ident] => p.bump(T![ident]),
         _ => unreachable!(),
     }
 }
 
-pub(crate) fn return_stmt(p: &mut Parser) {}
+pub(crate) fn return_stmt(p: &mut Parser) {
+    p.start_node(RETURN_STMT, T![return]);
+    if EXPR_START.contains(p.current()) {
+        expression(p);
+    }
+}
 
 // BreakStmt = 'break'
-pub(crate) fn break_stmt(p: &mut Parser) {}
+pub(crate) fn break_stmt(p: &mut Parser) {
+    p.start_node(BREAK_STMT, T![break]);
+    p.builder.finish_node();
+}
 
 // ContinueStmt = 'continue'
-pub(crate) fn continue_stmt(p: &mut Parser) {}
+pub(crate) fn continue_stmt(p: &mut Parser) {
+    p.start_node(CONTINUE_STMT, T![continue]);
+    p.builder.finish_node();
+}
 
 // PassStmt = 'pass'
-pub(crate) fn pass_stmt(p: &mut Parser) {}
+pub(crate) fn pass_stmt(p: &mut Parser) {
+    p.start_node(PASS_STMT, T![pass]);
+    p.builder.finish_node();
+}
 
 pub(crate) fn def_stmt(p: &mut Parser) {
     p.start_node(SyntaxKind::DEF_STMT, T![def]);
