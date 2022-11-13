@@ -106,7 +106,7 @@ impl GlobalState {
             let content = self.content.read().unwrap();
             let (ref text, ref lines) = **(content.get(&change).unwrap());
 
-            let mut diagnostics = Vec::new();
+            // let mut diagnostics = Vec::new();
 
             let mut pos = 0;
 
@@ -148,9 +148,9 @@ impl GlobalState {
 
             drop(content);
 
-            self.send_notification::<lsp_types::notification::PublishDiagnostics>(
-                lsp_types::PublishDiagnosticsParams::new(change, diagnostics, None),
-            );
+            // self.send_notification::<lsp_types::notification::PublishDiagnostics>(
+            //     lsp_types::PublishDiagnosticsParams::new(change, diagnostics, None),
+            // );
         }
 
         // Process diagnostic changes.
