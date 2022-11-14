@@ -1,7 +1,8 @@
 import {
+  ExecutableOptions,
   LanguageClient,
-  // LanguageClientOptions,
-  // ServerOptions,
+  LanguageClientOptions,
+  ServerOptions,
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
@@ -12,24 +13,27 @@ export function activate() {
     throw new Error('star-ls command is not set correctly');
   }
 
-  throw new Error('star-ls command is not set correctly');
+  const options: ExecutableOptions = {
+    env: {
+      'RUST_BACKTRACE': '1',
+    },
+  };
 
+  // TODO: Add debug support.
+  const serverOptions: ServerOptions = { command, options };
 
-  // // TODO: Add debug support.
-  // const serverOptions: ServerOptions = { command };
+  const clientOptions: LanguageClientOptions = {
+    documentSelector: [{ scheme: 'file', language: 'plaintext' }],
+  };
 
-  // const clientOptions: LanguageClientOptions = {
-  //   documentSelector: [{ scheme: 'file', language: 'plaintext' }],
-  // };
+  client = new LanguageClient(
+    'star-ls',
+    'Starlark Language Server',
+    serverOptions,
+    clientOptions
+  );
 
-  // client = new LanguageClient(
-  //   'star-ls',
-  //   'Starlark Language Server',
-  //   serverOptions,
-  //   clientOptions
-  // );
-
-  // client.start();
+  client.start();
 }
 
 export function deactivate(): Thenable<void> | undefined {

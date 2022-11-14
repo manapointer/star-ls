@@ -74,18 +74,21 @@ pub(crate) fn pass_stmt(p: &mut Parser) {
 pub(crate) fn def_stmt(p: &mut Parser) {
     p.start_node(SyntaxKind::DEF_STMT, T![def]);
 
-    if p.eat(T![ident]) {
+    if !p.eat(T![ident]) {
         p.builder.finish_node();
         p.error("Expected function name after def");
         return;
     }
-    if p.at(T!['(']) {
+
+    if !p.eat(T!['(']) {
         p.builder.finish_node();
         p.error("Expected opening '(' for parameter list");
         return;
     }
-    if p.at(T![,]) {
-        p.bump(T![,]);
+
+    if p.at(T![ident]) {
+        parameters(p);
+        p.eat(T![,]);
     }
 
     // Try to eat the matching ')'
@@ -102,12 +105,15 @@ pub(crate) fn def_stmt(p: &mut Parser) {
     let mut checked = false;
 
     // Try to eat the ending ':'
-    if !p.eat(T![:]) {
+    if !p.at(T![:]) {
+        eprintln!("current: {:?}", p.current());
         p.error("expected ':'");
         checked = true;
+
         // If we don't have it, recover to the next ':' or '\n'
         p.builder.start_node(ERROR.into());
         while !p.at(EOF) && !p.at(T![:]) && !p.at(T!['\n']) {
+            eprintln!("bumping: {:?}", p.current());
             p.bump_any();
         }
         p.builder.finish_node();
@@ -115,6 +121,7 @@ pub(crate) fn def_stmt(p: &mut Parser) {
 
     match p.current() {
         T![:] => {
+            eprintln!("colon path");
             p.bump(T![:]);
             match p.current() {
                 T!['\n'] => suite(p),
@@ -132,8 +139,12 @@ pub(crate) fn def_stmt(p: &mut Parser) {
         }
         T!['\n'] => {
             if !checked {
+                eprintln!("fgfhg");
                 p.error("expected ':'");
             }
+
+            eprintln!("next: {:?}", p.nth(1));
+
             // If next token is INDENT, can parse suite. Otherwise, consume '\n' and finish.
             if !p.nth_at(1, INDENT) {
                 p.finish_node(T!['\n']);

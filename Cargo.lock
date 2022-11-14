@@ -515,6 +515,7 @@ dependencies = [
  "salsa-2022",
  "serde",
  "serde_json",
+ "star_syntax",
 ]
 
 [[package]]
