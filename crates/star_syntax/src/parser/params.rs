@@ -1,6 +1,6 @@
 use super::*;
 
-fn parameters(p: &mut Parser) {
+pub(crate) fn parameters(p: &mut Parser) {
     p.builder.start_node(PARAMETERS.into());
     p.bump(IDENT);
     while !p.at(EOF) && !p.at(T![')']) && !p.at(T![:]) {

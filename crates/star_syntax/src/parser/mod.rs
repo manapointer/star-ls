@@ -1,6 +1,7 @@
 use rowan::{Checkpoint, GreenNode, GreenNodeBuilder};
 
 use crate::{
+    lexer::{Lexer, LexerReturn},
     SyntaxKind::{self, *},
     SyntaxKindSet, SyntaxNode, T,
 };
@@ -18,7 +19,7 @@ use params::*;
 use statements::*;
 use suite::*;
 
-pub(crate) struct Parse {
+pub struct Parse {
     errors: Vec<(String, usize)>,
     green: GreenNode,
 }
@@ -28,7 +29,7 @@ pub(crate) struct Parser<'a> {
     errors: Vec<(String, usize)>,
     tokens: Vec<(SyntaxKind, usize)>,
     tokens_without_whitespace: Vec<(SyntaxKind, usize)>,
-    src: &'a str,
+    input: &'a str,
     pos: usize,        // `tokens_without_whitespace` position
     source_pos: usize, // `tokens` position
     text_pos: usize,   // position in source file
@@ -38,10 +39,14 @@ impl Parse {
     pub fn syntax(&self) -> SyntaxNode {
         SyntaxNode::new_root(self.green.clone())
     }
+
+    pub fn errors(&self) -> &[(String, usize)] {
+        &self.errors
+    }
 }
 
 impl<'a> Parser<'a> {
-    pub(crate) fn new(tokens: Vec<(SyntaxKind, usize)>, src: &'a str) -> Self {
+    pub(crate) fn new(tokens: Vec<(SyntaxKind, usize)>, input: &'a str) -> Self {
         let tokens_without_whitespace = tokens
             .iter()
             .cloned()
@@ -52,7 +57,7 @@ impl<'a> Parser<'a> {
             errors: Vec::new(),
             tokens,
             tokens_without_whitespace,
-            src,
+            input,
             pos: 0,
             source_pos: 0,
             text_pos: 0,
@@ -108,7 +113,8 @@ impl<'a> Parser<'a> {
         assert!(self.at(mark));
         self.pos += 1;
         self.source_consume_whitespace();
-        self.builder.token(kind.into(), "");
+        self.builder.start_node(kind.into());
+        self.builder.token(mark.into(), "");
         self.source_pos += 1;
     }
 
@@ -181,4 +187,27 @@ pub(crate) fn file(p: &mut Parser) {
         }
     }
     p.builder.finish_node();
+}
+
+pub fn parse_file(input: &str) -> Parse {
+    let mut errors: Vec<String> = Vec::new();
+
+    let tokens = Lexer::from_str(input)
+        .map(|LexerReturn(token, error)| {
+            if let Some(error) = error {
+                errors.push(error);
+            }
+            (token.kind, token.len)
+        })
+        .collect::<Vec<_>>();
+
+    eprintln!("{:?}", tokens);
+
+    let mut p = Parser::new(tokens, input);
+    file(&mut p);
+
+    Parse {
+        errors: p.errors,
+        green: p.builder.finish(),
+    }
 }

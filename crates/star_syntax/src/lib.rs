@@ -2,7 +2,11 @@ pub mod lexer;
 pub mod parser;
 pub mod syntax_kind;
 
-pub(crate) use syntax_kind::*;
+pub(crate) use crate::syntax_kind::*;
+pub use crate::{
+    parser::{parse_file, Parse},
+    syntax_kind::SyntaxKind,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum StarlarkLanguage {}

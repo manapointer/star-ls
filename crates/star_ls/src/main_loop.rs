@@ -2,6 +2,7 @@ use crate::{global_state::GlobalState, ide::Lines, Result};
 use crossbeam_channel::select;
 use lsp_server::{Connection, Message, Notification, Request};
 use lsp_types::{Diagnostic, DiagnosticSeverity, Range, Url};
+use star_syntax::{parse_file, syntax_kind::SyntaxKind, SyntaxElement};
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -106,51 +107,32 @@ impl GlobalState {
             let content = self.content.read().unwrap();
             let (ref text, ref lines) = **(content.get(&change).unwrap());
 
-            // let mut diagnostics = Vec::new();
+            let parse = parse_file(text);
 
-            let mut pos = 0;
+            print(2, parse.syntax().into());
 
-            // let tokens =
-            //     Lexer::from_str(text).map(|LexerReturn(Token { kind, len }, diagnostic)| {
-            //         if let Some(diagnostic) = diagnostic {
-            //             diagnostics.push(Diagnostic {
-            //                 severity: Some(DiagnosticSeverity::ERROR),
-            //                 range: Range {
-            //                     start: lines.line_num_and_col(pos),
-            //                     end: lines.line_num_and_col(pos + len),
-            //                 },
-            //                 message: diagnostic,
-            //                 ..Default::default()
-            //             });
-            //         }
-            //         pos += len;
-            //         (kind, len)
-            //     });
-
-            // let parser = Parser::new(tokens, text);
-            // let parse = parser.parse();
-
-            // let diagnostics = diagnostics
-            //     .into_iter()
-            //     .chain(parse.errors.into_iter().map(|(message, pos)| {
-            //         let pos = lines.line_num_and_col(pos);
-            //         Diagnostic {
-            //             severity: Some(DiagnosticSeverity::ERROR),
-            //             range: Range {
-            //                 start: pos,
-            //                 end: pos,
-            //             },
-            //             message,
-            //             ..Default::default()
-            //         }
-            //     }))
-            //     .collect::<Vec<_>>();
+            let diagnostics = parse
+                .errors()
+                .iter()
+                .map(|(message, pos)| {
+                    let pos = lines.line_num_and_col(*pos);
+                    Diagnostic {
+                        severity: Some(DiagnosticSeverity::ERROR),
+                        range: Range {
+                            start: pos,
+                            end: pos,
+                        },
+                        message: message.clone(),
+                        ..Default::default()
+                    }
+                })
+                .collect();
 
             drop(content);
 
-            // self.send_notification::<lsp_types::notification::PublishDiagnostics>(
-            //     lsp_types::PublishDiagnosticsParams::new(change, diagnostics, None),
-            // );
+            self.send_notification::<lsp_types::notification::PublishDiagnostics>(
+                lsp_types::PublishDiagnosticsParams::new(change, diagnostics, None),
+            );
         }
 
         // Process diagnostic changes.
@@ -188,5 +170,19 @@ where
         Some(params)
     } else {
         None
+    }
+}
+
+fn print(indent: usize, element: SyntaxElement) {
+    let kind: SyntaxKind = element.kind().into();
+    eprint!("{:indent$}", "", indent = indent);
+    match element {
+        SyntaxElement::Node(node) => {
+            eprintln!("- {:?}", kind);
+            for child in node.children_with_tokens() {
+                print(indent + 2, child);
+            }
+        }
+        SyntaxElement::Token(token) => eprintln!("- {:?} {:?}", token.text(), kind),
     }
 }
