@@ -2,7 +2,7 @@ use super::*;
 
 /// spec: `Suite = [newline indent {Statement} outdent] | SimpleStmt .`
 pub(crate) fn suite(p: &mut Parser) {
-    p.builder.start_node(SUITE.into());
+    p.enter(SUITE);
     match p.current() {
         T!['\n'] => {
             p.bump(T!['\n']);
@@ -19,5 +19,5 @@ pub(crate) fn suite(p: &mut Parser) {
         kind if SMALL_STMT_START.contains(kind) => simple_stmt(p),
         _ => unreachable!(),
     }
-    p.builder.finish_node();
+    p.exit();
 }

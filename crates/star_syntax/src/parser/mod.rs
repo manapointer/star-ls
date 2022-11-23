@@ -25,9 +25,9 @@ pub struct Parse {
 }
 
 enum State {
-    Init,
+    Uninitialized,
     Normal,
-    Exiting,
+    PendingExit,
 }
 
 pub(crate) struct Parser<'a> {
@@ -39,7 +39,7 @@ pub(crate) struct Parser<'a> {
     pos: usize,        // `tokens_without_whitespace` position
     source_pos: usize, // `tokens` position
     state: State,
-    text_pos: usize, // position in source file
+    input_pos: usize, // position in source file
 }
 
 impl Parse {
@@ -73,8 +73,8 @@ impl<'a> Parser<'a> {
             input,
             pos: 0,
             source_pos: 0,
-            state: State::Init,
-            text_pos: 0,
+            state: State::Uninitialized,
+            input_pos: 0,
         }
     }
 
@@ -115,87 +115,80 @@ impl<'a> Parser<'a> {
     }
 
     fn do_bump(&mut self, kind: SyntaxKind) {
-        // self.builder.token(kind.into(), "");
         self.pos += 1;
+        self.token(kind);
+    }
+
+    fn token(&mut self, kind: SyntaxKind) {
+        match mem::replace(&mut self.state, State::Normal) {
+            State::Uninitialized => unreachable!(),
+            State::Normal => (),
+            State::PendingExit => self.builder.finish_node(),
+        }
+        self.eat_whitespace();
+        let (actual_kind, len) = self.tokens[self.source_pos];
+        assert_eq!(kind, actual_kind);
+        self.eat_token(kind, len);
     }
 
     fn checkpoint(&mut self) -> Checkpoint {
+        match mem::replace(&mut self.state, State::Normal) {
+            State::Uninitialized => unreachable!(),
+            State::Normal => (),
+            State::PendingExit => self.builder.finish_node(),
+        }
+        // Consume whitespace
+        self.eat_whitespace();
         self.builder.checkpoint()
     }
 
-    fn enter(&mut self) {
-        match mem::replace(&mut self.state, State::Normal) {
-            State::Init => unreachable!(),
-            State::Normal => (),
-            State::Exiting => self.builder.finish_node(),
-        }
-        // Consume whitespace
+    fn enter_at(&mut self, checkpoint: Checkpoint, kind: SyntaxKind) {
+        self.builder.start_node_at(checkpoint, kind.into())
     }
 
-    // Starts a new node in the GreenNodeBuilder. Consumes all whitespace until seeing the specified SyntaxKind,
-    // then starts the node and consumes the SyntaxKind.
-    // fn start_node(&mut self, kind: SyntaxKind, mark: SyntaxKind) {
-    //     assert!(self.at(mark));
-    //     self.builder.start_node(kind.into());
-    //     self.bump(mark);
-    //     // self.pos += 1;
-    //     // self.source_consume_whitespace();
-    //     // self.builder.start_node(kind.into());
-    //     // self.builder.token(mark.into(), "");
-    // }
+    fn enter(&mut self, kind: SyntaxKind) {
+        match mem::replace(&mut self.state, State::Normal) {
+            State::Uninitialized => {
+                self.builder.start_node(kind.into());
+                return;
+            }
+            State::Normal => (),
+            State::PendingExit => self.builder.finish_node(),
+        }
 
-    // fn start_node_any(&mut self, kind: SyntaxKind) {
-    //     // self.source_consume_whitespace();
-    //     self.builder.start_node(kind.into());
-    // }
+        self.eat_whitespace();
+        self.builder.start_node(kind.into());
+    }
 
-    // Finishes a node in the GreenNodeBuilder. Consumes all whitespace until seeing the specified SyntaxKind,
-    // then consumes the SyntaxKind and finishes the node.
-    // fn finish_node(&mut self, kind: SyntaxKind) {
-    //     self.bump(kind);
-    //     self.builder.finish_node();
-    // }
+    fn exit(&mut self) {
+        match mem::replace(&mut self.state, State::PendingExit) {
+            State::Uninitialized => unreachable!(),
+            State::Normal => (),
+            State::PendingExit => self.builder.finish_node(),
+        }
+    }
 
-    // /// Consumes whitespace in the original tokens Vec.
-    // fn source_consume_whitespace(&mut self) {
-    //     while self.source_at(WHITESPACE) {
-    //         self.builder.token(WHITESPACE.into(), "");
-    //         self.source_pos += 1;
-    //         self.source_do_bump();
-    //     }
-    // }
+    fn eat_whitespace(&mut self) {
+        while self.source_pos < self.tokens.len() {
+            let (kind, len) = self.tokens[self.source_pos];
+            if !kind.is_whitespace() {
+                break;
+            }
+            self.eat_token(kind, len)
+        }
+    }
 
-    // fn source_at(&self, kind: SyntaxKind) -> bool {
-    //     self.source_current() == kind
-    // }
-
-    // fn source_current(&self) -> SyntaxKind {
-    //     self.tokens
-    //         .get(self.source_pos)
-    //         .map(|(kind, _)| *kind)
-    //         .unwrap_or(EOF)
-    // }
-
-    // fn source_current_len(&self) -> usize {
-    //     self.tokens
-    //         .get(self.source_pos)
-    //         .map(|(_, len)| *len)
-    //         .unwrap_or(0)
-    // }
-
-    // fn source_bump(&mut self) {
-    //     self.source_consume_whitespace();
-    //     self.builder.token(self.source_current().into(), "");
-    //     self.source_do_bump();
-    // }
-
-    // fn source_do_bump(&mut self) {
-    //     self.text_pos += self.source_current_len();
-    //     self.source_pos += 1;
-    // }
+    fn eat_token(&mut self, kind: SyntaxKind, len: usize) {
+        self.source_pos += 1;
+        self.builder.token(
+            kind.into(),
+            &self.input[self.input_pos..self.input_pos + len],
+        );
+        self.input_pos += len;
+    }
 
     fn error(&mut self, msg: &str) {
-        self.errors.push((msg.to_string(), self.text_pos))
+        self.errors.push((msg.to_string(), self.input_pos))
     }
 
     fn expect(&mut self, kind: SyntaxKind) -> bool {
@@ -208,12 +201,13 @@ impl<'a> Parser<'a> {
 }
 
 pub(crate) fn file(p: &mut Parser) {
-    p.builder.start_node(FILE.into());
+    // p.builder.start_node(FILE.into());
+    p.enter(FILE);
     while !p.at(EOF) {
         eprintln!("{:?}", p.current());
         statement(p);
     }
-    p.builder.finish_node();
+    p.exit();
 }
 
 pub fn parse_file(input: &str) -> Parse {
@@ -232,6 +226,15 @@ pub fn parse_file(input: &str) -> Parse {
 
     let mut p = Parser::new(tokens, input);
     file(&mut p);
+
+    match mem::replace(&mut p.state, State::Normal) {
+        State::Uninitialized | State::Normal => unreachable!(),
+        State::PendingExit => {
+            // Consume remaining whitespace before exiting from FILE.
+            p.eat_whitespace();
+            p.builder.finish_node();
+        }
+    }
 
     Parse {
         errors: p.errors,
