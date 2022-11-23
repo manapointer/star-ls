@@ -7,9 +7,15 @@ pub(crate) fn statement(p: &mut Parser) {
     match p.current() {
         T![def] => def_stmt(p),
         kind if SMALL_STMT_START.contains(kind) => simple_stmt(p),
+        T!['\n'] => p.bump(T!['\n']),
         _ => {
             p.error("Expected statement");
-            p.bump_any();
+            p.builder.start_node(ERROR.into());
+            while !p.at(EOF) && !p.at(T!['\n']) {
+                p.bump_any();
+            }
+            p.eat(T!['\n']);
+            p.builder.finish_node();
         }
     }
 }
@@ -51,6 +57,7 @@ pub(crate) fn return_stmt(p: &mut Parser) {
     if EXPR_START.contains(p.current()) {
         expression(p);
     }
+    p.builder.finish_node();
 }
 
 // BreakStmt = 'break'
@@ -104,16 +111,14 @@ pub(crate) fn def_stmt(p: &mut Parser) {
 
     let mut checked = false;
 
-    // Try to eat the ending ':'
+    // Check if we are at the ending ':'
     if !p.at(T![:]) {
-        eprintln!("current: {:?}", p.current());
-        p.error("expected ':'");
+        p.error("Expected ':'");
         checked = true;
 
         // If we don't have it, recover to the next ':' or '\n'
         p.builder.start_node(ERROR.into());
         while !p.at(EOF) && !p.at(T![:]) && !p.at(T!['\n']) {
-            eprintln!("bumping: {:?}", p.current());
             p.bump_any();
         }
         p.builder.finish_node();
@@ -121,11 +126,10 @@ pub(crate) fn def_stmt(p: &mut Parser) {
 
     match p.current() {
         T![:] => {
-            eprintln!("colon path");
             p.bump(T![:]);
             match p.current() {
                 T!['\n'] => suite(p),
-                kind if SMALL_STMT_START.contains(kind) => {}
+                kind if SMALL_STMT_START.contains(kind) => suite(p),
                 _ => {
                     p.builder.start_node(ERROR.into());
                     while !p.at(EOF) && !p.at(T!['\n']) {
@@ -139,11 +143,8 @@ pub(crate) fn def_stmt(p: &mut Parser) {
         }
         T!['\n'] => {
             if !checked {
-                eprintln!("fgfhg");
                 p.error("expected ':'");
             }
-
-            eprintln!("next: {:?}", p.nth(1));
 
             // If next token is INDENT, can parse suite. Otherwise, consume '\n' and finish.
             if !p.nth_at(1, INDENT) {

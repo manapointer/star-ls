@@ -1,10 +1,10 @@
-use rowan::{Checkpoint, GreenNode, GreenNodeBuilder};
-
 use crate::{
     lexer::{Lexer, LexerReturn},
     SyntaxKind::{self, *},
     SyntaxKindSet, SyntaxNode, T,
 };
+use rowan::{Checkpoint, GreenNode, GreenNodeBuilder};
+use std::mem;
 
 mod expressions;
 mod params;
@@ -24,15 +24,22 @@ pub struct Parse {
     green: GreenNode,
 }
 
+enum State {
+    Init,
+    Normal,
+    Exiting,
+}
+
 pub(crate) struct Parser<'a> {
     builder: GreenNodeBuilder<'static>,
     errors: Vec<(String, usize)>,
     tokens: Vec<(SyntaxKind, usize)>,
-    tokens_without_whitespace: Vec<(SyntaxKind, usize)>,
+    tokens_without_whitespace: Vec<SyntaxKind>,
     input: &'a str,
     pos: usize,        // `tokens_without_whitespace` position
     source_pos: usize, // `tokens` position
-    text_pos: usize,   // position in source file
+    state: State,
+    text_pos: usize, // position in source file
 }
 
 impl Parse {
@@ -49,9 +56,15 @@ impl<'a> Parser<'a> {
     pub(crate) fn new(tokens: Vec<(SyntaxKind, usize)>, input: &'a str) -> Self {
         let tokens_without_whitespace = tokens
             .iter()
-            .cloned()
-            .filter(|(kind, _)| *kind != SyntaxKind::WHITESPACE)
+            .filter_map(|(kind, _)| {
+                if *kind != WHITESPACE {
+                    Some(*kind)
+                } else {
+                    None
+                }
+            })
             .collect();
+
         Self {
             builder: GreenNodeBuilder::new(),
             errors: Vec::new(),
@@ -60,6 +73,7 @@ impl<'a> Parser<'a> {
             input,
             pos: 0,
             source_pos: 0,
+            state: State::Init,
             text_pos: 0,
         }
     }
@@ -72,8 +86,8 @@ impl<'a> Parser<'a> {
         assert!(n < 2);
         self.tokens_without_whitespace
             .get(self.pos + n)
-            .map(|&(kind, _)| kind)
-            .unwrap_or(SyntaxKind::EOF)
+            .cloned()
+            .unwrap_or(EOF)
     }
 
     fn at(&self, kind: SyntaxKind) -> bool {
@@ -88,8 +102,7 @@ impl<'a> Parser<'a> {
         if !self.at(kind) {
             return false;
         }
-        self.pos += 1;
-        self.source_bump();
+        self.do_bump(kind);
         true
     }
 
@@ -98,75 +111,88 @@ impl<'a> Parser<'a> {
     }
 
     fn bump_any(&mut self) {
+        self.do_bump(self.current());
+    }
+
+    fn do_bump(&mut self, kind: SyntaxKind) {
+        // self.builder.token(kind.into(), "");
         self.pos += 1;
-        self.source_bump();
     }
 
     fn checkpoint(&mut self) -> Checkpoint {
-        self.source_consume_whitespace();
         self.builder.checkpoint()
+    }
+
+    fn enter(&mut self) {
+        match mem::replace(&mut self.state, State::Normal) {
+            State::Init => unreachable!(),
+            State::Normal => (),
+            State::Exiting => self.builder.finish_node(),
+        }
+        // Consume whitespace
     }
 
     // Starts a new node in the GreenNodeBuilder. Consumes all whitespace until seeing the specified SyntaxKind,
     // then starts the node and consumes the SyntaxKind.
-    fn start_node(&mut self, kind: SyntaxKind, mark: SyntaxKind) {
-        assert!(self.at(mark));
-        self.pos += 1;
-        self.source_consume_whitespace();
-        self.builder.start_node(kind.into());
-        self.builder.token(mark.into(), "");
-        self.source_pos += 1;
-    }
+    // fn start_node(&mut self, kind: SyntaxKind, mark: SyntaxKind) {
+    //     assert!(self.at(mark));
+    //     self.builder.start_node(kind.into());
+    //     self.bump(mark);
+    //     // self.pos += 1;
+    //     // self.source_consume_whitespace();
+    //     // self.builder.start_node(kind.into());
+    //     // self.builder.token(mark.into(), "");
+    // }
 
-    fn start_node_any(&mut self, kind: SyntaxKind) {
-        self.source_consume_whitespace();
-        self.builder.start_node(kind.into());
-    }
+    // fn start_node_any(&mut self, kind: SyntaxKind) {
+    //     // self.source_consume_whitespace();
+    //     self.builder.start_node(kind.into());
+    // }
 
     // Finishes a node in the GreenNodeBuilder. Consumes all whitespace until seeing the specified SyntaxKind,
     // then consumes the SyntaxKind and finishes the node.
-    fn finish_node(&mut self, kind: SyntaxKind) {
-        self.bump(kind);
-        self.builder.finish_node();
-    }
+    // fn finish_node(&mut self, kind: SyntaxKind) {
+    //     self.bump(kind);
+    //     self.builder.finish_node();
+    // }
 
-    /// Consumes whitespace in the original tokens Vec.
-    fn source_consume_whitespace(&mut self) {
-        while self.source_at(WHITESPACE) {
-            self.builder.token(WHITESPACE.into(), "");
-            self.source_pos += 1;
-            self.source_do_bump();
-        }
-    }
+    // /// Consumes whitespace in the original tokens Vec.
+    // fn source_consume_whitespace(&mut self) {
+    //     while self.source_at(WHITESPACE) {
+    //         self.builder.token(WHITESPACE.into(), "");
+    //         self.source_pos += 1;
+    //         self.source_do_bump();
+    //     }
+    // }
 
-    fn source_at(&self, kind: SyntaxKind) -> bool {
-        self.source_current() == kind
-    }
+    // fn source_at(&self, kind: SyntaxKind) -> bool {
+    //     self.source_current() == kind
+    // }
 
-    fn source_current(&self) -> SyntaxKind {
-        self.tokens
-            .get(self.source_pos)
-            .map(|(kind, _)| *kind)
-            .unwrap_or(EOF)
-    }
+    // fn source_current(&self) -> SyntaxKind {
+    //     self.tokens
+    //         .get(self.source_pos)
+    //         .map(|(kind, _)| *kind)
+    //         .unwrap_or(EOF)
+    // }
 
-    fn source_current_len(&self) -> usize {
-        self.tokens
-            .get(self.source_pos)
-            .map(|(_, len)| *len)
-            .unwrap_or(0)
-    }
+    // fn source_current_len(&self) -> usize {
+    //     self.tokens
+    //         .get(self.source_pos)
+    //         .map(|(_, len)| *len)
+    //         .unwrap_or(0)
+    // }
 
-    fn source_bump(&mut self) {
-        self.source_consume_whitespace();
-        self.builder.token(self.source_current().into(), "");
-        self.source_do_bump();
-    }
+    // fn source_bump(&mut self) {
+    //     self.source_consume_whitespace();
+    //     self.builder.token(self.source_current().into(), "");
+    //     self.source_do_bump();
+    // }
 
-    fn source_do_bump(&mut self) {
-        self.text_pos += self.source_current_len();
-        self.source_pos += 1;
-    }
+    // fn source_do_bump(&mut self) {
+    //     self.text_pos += self.source_current_len();
+    //     self.source_pos += 1;
+    // }
 
     fn error(&mut self, msg: &str) {
         self.errors.push((msg.to_string(), self.text_pos))
@@ -184,10 +210,8 @@ impl<'a> Parser<'a> {
 pub(crate) fn file(p: &mut Parser) {
     p.builder.start_node(FILE.into());
     while !p.at(EOF) {
-        match p.current() {
-            T!['\n'] => p.bump(T!['\n']),
-            _ => statement(p),
-        }
+        eprintln!("{:?}", p.current());
+        statement(p);
     }
     p.builder.finish_node();
 }

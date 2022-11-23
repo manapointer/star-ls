@@ -24,3 +24,4 @@ impl rowan::Language for StarlarkLanguage {
 pub type SyntaxNode = rowan::SyntaxNode<StarlarkLanguage>;
 pub type SyntaxToken = rowan::SyntaxToken<StarlarkLanguage>;
 pub type SyntaxElement = rowan::NodeOrToken<SyntaxNode, SyntaxToken>;
+pub type WalkEvent = rowan::WalkEvent<SyntaxElement>;
