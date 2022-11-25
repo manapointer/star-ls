@@ -6,6 +6,7 @@ use crate::{
 use rowan::{Checkpoint, GreenNode, GreenNodeBuilder};
 use std::mem;
 
+mod arguments;
 mod expressions;
 mod params;
 mod statements;
@@ -40,6 +41,7 @@ pub(crate) struct Parser<'a> {
     source_pos: usize, // `tokens` position
     state: State,
     input_pos: usize, // position in source file
+    depth: usize,
 }
 
 impl Parse {
@@ -75,6 +77,7 @@ impl<'a> Parser<'a> {
             source_pos: 0,
             state: State::Uninitialized,
             input_pos: 0,
+            depth: 0,
         }
     }
 

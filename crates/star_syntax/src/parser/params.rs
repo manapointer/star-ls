@@ -8,7 +8,7 @@ pub(crate) fn parameters(p: &mut Parser) {
     parameter(p);
 
     while !p.at(EOF) && !p.at(T![')']) && !p.at(T![:]) {
-        if !(p.at(T![,]) && p.nth_at(1, T![ident])) {
+        if !(p.at(T![,]) && PARAMETER_START.contains(p.nth(1))) {
             break;
         }
         p.bump(T![,]);
