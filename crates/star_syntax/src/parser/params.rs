@@ -35,7 +35,9 @@ pub(crate) fn parameter(p: &mut Parser) {
         return;
     }
 
-    if p.eat(T![=]) {}
+    if p.eat(T![=]) {
+        test(p);
+    }
 
     p.exit();
 }

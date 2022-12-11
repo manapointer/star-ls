@@ -45,7 +45,7 @@ pub(crate) fn test(p: &mut Parser) {
 pub(crate) fn or_expr(p: &mut Parser) {
     let checkpoint = p.checkpoint();
     and_expr(p);
-    while p.at(OR) {
+    while p.at(T![or]) {
         p.enter_at(checkpoint, BINARY_EXPR);
         p.bump_any();
         and_expr(p);
@@ -55,10 +55,27 @@ pub(crate) fn or_expr(p: &mut Parser) {
 
 pub(crate) fn and_expr(p: &mut Parser) {
     let checkpoint = p.checkpoint();
+    eq_expr(p);
+    while p.at(T![and]) {
+        p.enter_at(checkpoint, BINARY_EXPR);
+        p.bump_any();
+        eq_expr(p);
+        p.exit();
+    }
 }
 
 pub(crate) fn eq_expr(p: &mut Parser) {
     let checkpoint = p.checkpoint();
+    bitwise_or_expr(p);
+    while matches!(
+        p.current(),
+        T![==] | T![!=] | T![<] | T![>] | T![<=] | T![>=] | T![in]
+    ) {
+        p.enter_at(checkpoint, BINARY_EXPR);
+        p.bump_any();
+        bitwise_or_expr(p);
+        p.exit();
+    }
 }
 
 pub(crate) fn bitwise_or_expr(p: &mut Parser) {
@@ -163,6 +180,7 @@ pub(crate) fn primary_expr(p: &mut Parser) {
                         p.error("expected ':' or expression");
                         // TODO: Recover to closing brace?
                         p.exit();
+                        return;
                     }
                 }
 
@@ -189,4 +207,15 @@ pub(crate) fn primary_expr(p: &mut Parser) {
     }
 }
 
-pub(crate) fn atom_expr(p: &mut Parser) {}
+/// Operand = identifier
+///         | int | float | string | bytes
+///         | ListExpr | ListComp
+///         | DictExpr | DictComp
+///         | '(' [Expression [',']] ')'
+///         .
+pub(crate) fn atom_expr(p: &mut Parser) {
+    match p.current() {
+        T![ident] | INT | FLOAT | STRING => p.bump_any(),
+        _ => p.error("expected expression"),
+    }
+}

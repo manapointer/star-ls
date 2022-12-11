@@ -13,5 +13,13 @@ pub(crate) fn argument(p: &mut Parser) {
         _ => unreachable!(),
     }
 
-    // if !p.expect(T![])
+    if p.at(T![ident]) && p.at(T![=]) {
+        p.bump(T![ident]);
+        p.bump(T![=]);
+        test(p);
+    } else {
+        test(p);
+    }
+
+    p.exit();
 }

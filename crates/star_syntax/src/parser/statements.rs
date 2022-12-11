@@ -47,8 +47,7 @@ pub(crate) fn small_stmt(p: &mut Parser) {
         T![break] => break_stmt(p),
         T![continue] => continue_stmt(p),
         T![pass] => pass_stmt(p),
-
-        T![ident] => p.bump(T![ident]),
+        kind if EXPR_START.contains(kind) => expression(p),
         _ => unreachable!(),
     }
 }
