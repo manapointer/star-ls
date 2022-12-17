@@ -1,2 +1,2 @@
 [workspace]
-members = ["crates/*"]
+members = ["crates/star_ls", "crates/star_syntax"]

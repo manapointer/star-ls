@@ -1,1 +1,7 @@
+# Bazel
+bazel-bin
+bazel-out
+bazel-star-ls
+bazel-testlogs
+
 target/
