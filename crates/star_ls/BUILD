@@ -18,5 +18,6 @@ rust_library(
 rust_binary(
     name = "star_ls",
     srcs = ["src/bin/main.rs"],
+    aliases = {k: v for (k, v) in aliases.items() + [(":star_ls_lib", "star_ls")]},
     deps = deps + [":star_ls_lib"],
 )
