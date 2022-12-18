@@ -16,7 +16,7 @@
             "label": "Build Server",
             "group": "build",
             "type": "shell",
-            "command": "cargo build --package star_ls",
+            "command": "bazel build //crates/star_ls",
             "problemMatcher": "$rustc"
         },
         {

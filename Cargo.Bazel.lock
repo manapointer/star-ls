@@ -1,5 +1,5 @@
 {
-  "checksum": "ae49779c4d3086d993dd77b9c5d7c3c9d5fae0d14d6c81e4793725ba4f0d39e4",
+  "checksum": "5a06cb5e3275172ef61972b91cb23fbf80d96fe3703056bcdb17840b7285c6e5",
   "crates": {
     "ahash 0.7.6": {
       "name": "ahash",
@@ -2535,6 +2535,7 @@
           "commitish": {
             "Rev": "252d21e358979cd684666ebc32d2bc49d6f1d3f0"
           },
+          "shallow_since": "1669697685 +0000",
           "strip_prefix": "components/salsa-2022"
         }
       },
@@ -2625,6 +2626,7 @@
           "commitish": {
             "Rev": "252d21e358979cd684666ebc32d2bc49d6f1d3f0"
           },
+          "shallow_since": "1669697685 +0000",
           "strip_prefix": "components/salsa-2022-macros"
         }
       },
