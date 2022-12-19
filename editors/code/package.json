@@ -32,7 +32,37 @@
           "description": "Traces the communication between VS Code and the language server."
         }
       }
-    }
+    },
+    "grammars": [
+      {
+        "language": "starlark",
+        "scopeName": "source.starlark",
+        "path": "./syntaxes/starlark.tmLanguage.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "starlark",
+        "aliases": [
+          "Starlark",
+          "starlark",
+          "Bazel"
+        ],
+        "extensions": [
+          ".BUILD",
+          ".WORKSPACE",
+          ".bazel",
+          ".bzl",
+          ".sky",
+          ".star"
+        ],
+        "filenames": [
+          "BUILD",
+          "WORKSPACE"
+        ],
+        "configuration": "./syntaxes/starlark.configuration.json"
+      }
+    ]
   },
   "scripts": {
     "build": "tsc -b",
