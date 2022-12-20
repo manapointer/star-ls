@@ -1,2 +1,6 @@
 [workspace]
-members = ["crates/star_ls", "crates/star_syntax"]
+members = [
+    "crates/star_db",
+    "crates/star_ls", 
+    "crates/star_syntax",
+]

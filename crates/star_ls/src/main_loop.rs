@@ -41,7 +41,12 @@ impl GlobalState {
             params.text_document.uri.clone(),
             Arc::new((params.text_document.text, lines)),
         );
-        self.changes.insert(params.text_document.uri);
+        self.changes.insert(params.text_document.uri.clone());
+        self.subscriptions.add(params.text_document.uri);
+    }
+
+    fn did_close_text_document(&mut self, params: lsp_types::DidCloseTextDocumentParams) {
+        self.subscriptions.remove(&params.text_document.uri);
     }
 
     fn recv(&self) -> Option<Event> {
@@ -88,6 +93,10 @@ impl GlobalState {
                         cast_notification::<lsp_types::notification::DidOpenTextDocument>(&not)
                     {
                         self.did_open_text_document(params);
+                    } else if let Some(params) =
+                        cast_notification::<lsp_types::notification::DidCloseTextDocument>(&not)
+                    {
+                        self.did_close_text_document(params);
                     }
                 }
             },
@@ -100,6 +109,7 @@ impl GlobalState {
 
         // Check changed files.
         let changes = self.take_changes();
+
         eprintln!("processing changes: {}", changes.len());
 
         for change in changes {
@@ -111,6 +121,8 @@ impl GlobalState {
             //     - Recalculate diagnostics
             //     - update_diagnostics()
         }
+
+        let subscriptions_changed = self.subscriptions.take_changed();
 
         // Process diagnostic changes.
         let diagnostic_changes = self.take_diagnostic_changes();
@@ -135,6 +147,7 @@ impl GlobalState {
     }
 
     fn update_diagnostics(&self) {
+        self.task_pool.spawn(|| Task::Diagnostics(Vec::new()))
         // Spawn task on thread pool.
     }
 }
