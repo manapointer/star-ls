@@ -1,14 +1,26 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use std::collections::HashMap;
+
+#[salsa::jar(db = Db)]
+pub struct Jar(parse, File);
+
+pub trait Db: salsa::DbWithJar<Jar> {}
+
+#[salsa::db(Jar)]
+#[derive(Default)]
+struct Database {
+    storage: salsa::Storage<Self>,
+    files: HashMap<String, File>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl Db for Database {}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+impl salsa::Database for Database {}
+
+#[salsa::input]
+pub struct File {
+    #[return_ref]
+    text: String,
 }
+
+#[salsa::tracked]
+pub fn parse(db: &dyn Db) {}

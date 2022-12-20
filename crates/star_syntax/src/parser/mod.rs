@@ -1,5 +1,6 @@
 use crate::{
     lexer::{Lexer, LexerReturn},
+    Diagnostic,
     SyntaxKind::{self, *},
     SyntaxKindSet, SyntaxNode, T,
 };
@@ -21,7 +22,7 @@ use statements::*;
 use suite::*;
 
 pub struct Parse {
-    errors: Vec<(String, usize)>,
+    errors: Vec<Diagnostic>,
     green: GreenNode,
 }
 
@@ -33,7 +34,7 @@ enum State {
 
 pub(crate) struct Parser<'a> {
     builder: GreenNodeBuilder<'static>,
-    errors: Vec<(String, usize)>,
+    errors: Vec<Diagnostic>,
     tokens: Vec<(SyntaxKind, usize)>,
     tokens_without_whitespace: Vec<SyntaxKind>,
     input: &'a str,
@@ -49,7 +50,7 @@ impl Parse {
         SyntaxNode::new_root(self.green.clone())
     }
 
-    pub fn errors(&self) -> &[(String, usize)] {
+    pub fn errors(&self) -> &[Diagnostic] {
         &self.errors
     }
 }
@@ -191,7 +192,8 @@ impl<'a> Parser<'a> {
     }
 
     fn error(&mut self, msg: &str) {
-        self.errors.push((msg.to_string(), self.input_pos))
+        self.errors
+            .push(Diagnostic::new(msg.to_string(), self.input_pos))
     }
 
     fn expect(&mut self, kind: SyntaxKind) -> bool {

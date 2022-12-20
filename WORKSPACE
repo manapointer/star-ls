@@ -37,6 +37,7 @@ crates_repository(
     lockfile = "//:Cargo.Bazel.lock",
     manifests = [
         "//:Cargo.toml",
+        "//crates/star_db:Cargo.toml",
         "//crates/star_ls:Cargo.toml",
         "//crates/star_syntax:Cargo.toml",
     ],
