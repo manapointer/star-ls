@@ -21,6 +21,7 @@ use params::*;
 use statements::*;
 use suite::*;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Parse {
     errors: Vec<Diagnostic>,
     green: GreenNode,

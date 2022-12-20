@@ -26,7 +26,7 @@ pub type SyntaxToken = rowan::SyntaxToken<StarlarkLanguage>;
 pub type SyntaxElement = rowan::NodeOrToken<SyntaxNode, SyntaxToken>;
 pub type WalkEvent = rowan::WalkEvent<SyntaxElement>;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Diagnostic {
     message: String,
     pos: usize,
