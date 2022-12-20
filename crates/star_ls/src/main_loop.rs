@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum Task {
-    Diagnostics,
+    Diagnostics(Vec<(Url, Vec<Diagnostic>)>),
 }
 
 #[derive(Debug)]
@@ -49,7 +49,7 @@ impl GlobalState {
             recv(self.connection.receiver) -> msg => {
                 msg.ok().map(Event::Lsp)
             }
-            recv(self.thread_pool_receiver) -> task => {
+            recv(self.task_pool.receiver) -> task => {
                 Some(Event::Task(task.unwrap()))
             }
         }
@@ -91,7 +91,9 @@ impl GlobalState {
                     }
                 }
             },
-            Event::Task(task) => {}
+            Event::Task(task) => {
+                self.handle_task(task);
+            }
         }
 
         eprintln!("main loop turn");
@@ -101,47 +103,39 @@ impl GlobalState {
         eprintln!("processing changes: {}", changes.len());
 
         for change in changes {
-            // Calculate and update diagnostics.
-            let content = self.content.read().unwrap();
-            let (ref text, ref lines) = **(content.get(&change).unwrap());
-
-            let parse = parse_file(text);
-
-            eprintln!("{}", render(parse.syntax()));
-
-            let diagnostics = parse
-                .errors()
-                .iter()
-                .map(|(message, pos)| {
-                    let pos = lines.line_num_and_col(*pos);
-                    Diagnostic {
-                        severity: Some(DiagnosticSeverity::ERROR),
-                        range: Range {
-                            start: pos,
-                            end: pos,
-                        },
-                        message: message.clone(),
-                        ..Default::default()
-                    }
-                })
-                .collect();
-
-            drop(content);
-
-            self.send_notification::<lsp_types::notification::PublishDiagnostics>(
-                lsp_types::PublishDiagnosticsParams::new(change, diagnostics, None),
-            );
+            // TODO:
+            // For each file change:
+            //   - update file content map
+            // Spawn task:
+            //   - For each subscribed file
+            //     - Recalculate diagnostics
+            //     - update_diagnostics()
         }
 
         // Process diagnostic changes.
-        // let diagnostic_changes = self.take_diagnostic_changes();
-        // for url in diagnostic_changes {
-        //     self.send_notification::<lsp_types::notification::PublishDiagnostics>(
-        //         lsp_types::PublishDiagnosticsParams::new(url, vec![], None),
-        //     );
-        // }
+        let diagnostic_changes = self.take_diagnostic_changes();
+        for url in diagnostic_changes {
+            let diagnostic = self.latest_diagnostics.get(&url).cloned().unwrap();
+            self.send_notification::<lsp_types::notification::PublishDiagnostics>(
+                lsp_types::PublishDiagnosticsParams::new(url, diagnostic, None),
+            );
+        }
 
         Ok(())
+    }
+
+    fn handle_task(&mut self, task: Task) {
+        match task {
+            Task::Diagnostics(diagnostics) => {
+                for (url, file_diagnostics) in diagnostics {
+                    self.process_incoming_diagnostics(url, file_diagnostics);
+                }
+            }
+        }
+    }
+
+    fn update_diagnostics(&self) {
+        // Spawn task on thread pool.
     }
 }
 
