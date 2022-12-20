@@ -520,6 +520,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "star_ide"
+version = "0.1.0"
+
+[[package]]
 name = "star_ls"
 version = "0.1.0"
 dependencies = [

@@ -1,19 +1,18 @@
 use crossbeam_channel::{Receiver, Sender};
 use lsp_server::{Connection, Message, Notification};
 use lsp_types::Url;
+use star_db::Database;
 use std::{
     collections::{HashMap, HashSet},
     mem,
-    sync::{Arc, RwLock},
 };
 
-use crate::{db::Database, ide::Lines, main_loop::Task, subscriptions::Subscriptions};
+use crate::{main_loop::Task, subscriptions::Subscriptions};
 
 pub(crate) struct GlobalState {
     /// Changes to document contents.
-    pub(crate) changes: HashSet<Url>,
+    pub(crate) changes: Vec<(Url, String)>,
     pub(crate) connection: Connection,
-    pub(crate) content: RwLock<HashMap<Url, Arc<(String, Lines)>>>,
     pub(crate) db: Database,
 
     /// Changes to calculated diagnostics.
@@ -31,7 +30,6 @@ impl GlobalState {
             diagnostics_to_sync: Default::default(),
             latest_diagnostics: Default::default(),
             connection,
-            content: RwLock::default(),
             db: Database::default(),
             task_pool: TaskPool::new(),
             subscriptions: Default::default(),
@@ -62,7 +60,7 @@ impl GlobalState {
         mem::take(&mut self.diagnostics_to_sync)
     }
 
-    pub(crate) fn take_changes(&mut self) -> HashSet<Url> {
+    pub(crate) fn take_changes(&mut self) -> Vec<(Url, String)> {
         mem::take(&mut self.changes)
     }
 
@@ -104,5 +102,13 @@ impl TaskPool {
         self.pool.spawn(move || {
             sender.send(f()).unwrap();
         });
+    }
+
+    pub(crate) fn spawn_with_sender<F>(&self, f: F)
+    where
+        F: FnOnce(Sender<Task>) + Send + 'static,
+    {
+        let sender = self.sender.clone();
+        self.pool.spawn(move || f(sender))
     }
 }

@@ -1,8 +1,8 @@
-use crate::{global_state::GlobalState, ide::Lines, Result};
+use crate::{global_state::GlobalState, Result};
 use crossbeam_channel::select;
 use lsp_server::{Connection, Message, Notification, Request};
-use lsp_types::{Diagnostic, DiagnosticSeverity, Range, Url};
-use star_syntax::{parse_file, SyntaxElement, SyntaxNode, WalkEvent};
+use lsp_types::{Diagnostic, Url};
+use star_syntax::{SyntaxElement, SyntaxNode, WalkEvent};
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -21,27 +21,15 @@ pub fn main_loop(connection: Connection) -> Result<()> {
 }
 
 impl GlobalState {
-    fn set_document_content(&mut self, uri: Url, text: String) {
-        let mut content = self.content.write().unwrap();
-        let lines = Lines::from_str(&text);
-        content.insert(uri.clone(), Arc::new((text, lines)));
-        self.changes.insert(uri);
-    }
-
     fn did_change_text_document(&mut self, mut params: lsp_types::DidChangeTextDocumentParams) {
         if let Some(change) = params.content_changes.pop() {
-            self.set_document_content(params.text_document.uri, change.text);
+            self.changes.push((params.text_document.uri, change.text));
         }
     }
 
     fn did_open_text_document(&mut self, params: lsp_types::DidOpenTextDocumentParams) {
-        let mut content = self.content.write().unwrap();
-        let lines = Lines::from_str(&params.text_document.text);
-        content.insert(
-            params.text_document.uri.clone(),
-            Arc::new((params.text_document.text, lines)),
-        );
-        self.changes.insert(params.text_document.uri.clone());
+        self.changes
+            .push((params.text_document.uri.clone(), params.text_document.text));
         self.subscriptions.add(params.text_document.uri);
     }
 
@@ -109,20 +97,20 @@ impl GlobalState {
 
         // Check changed files.
         let changes = self.take_changes();
+        let content_changed = !changes.is_empty();
 
         eprintln!("processing changes: {}", changes.len());
 
-        for change in changes {
-            // TODO:
-            // For each file change:
-            //   - update file content map
-            // Spawn task:
-            //   - For each subscribed file
-            //     - Recalculate diagnostics
-            //     - update_diagnostics()
+        for (url, text) in changes {
+            self.db.set_file_text(url.to_string(), text);
         }
 
         let subscriptions_changed = self.subscriptions.take_changed();
+
+        // If file contents changed, or we opened/closed a file, recalculate diagnostics.
+        if content_changed || subscriptions_changed {
+            self.update_diagnostics();
+        }
 
         // Process diagnostic changes.
         let diagnostic_changes = self.take_diagnostic_changes();
@@ -147,8 +135,11 @@ impl GlobalState {
     }
 
     fn update_diagnostics(&self) {
-        self.task_pool.spawn(|| Task::Diagnostics(Vec::new()))
-        // Spawn task on thread pool.
+        self.task_pool.spawn_with_sender(|sender| {
+            if let Ok(task) = salsa::Cancelled::catch(|| Task::Diagnostics(Vec::new())) {
+                sender.send(task).unwrap()
+            }
+        })
     }
 }
 

@@ -1,9 +1,7 @@
 use lsp_types::{ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind};
 
-mod db;
 mod errors;
 mod global_state;
-mod ide;
 mod main_loop;
 mod subscriptions;
 

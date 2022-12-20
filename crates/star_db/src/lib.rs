@@ -8,7 +8,7 @@ pub trait Db: salsa::DbWithJar<Jar> {}
 
 #[salsa::db(Jar)]
 #[derive(Default)]
-struct Database {
+pub struct Database {
     storage: salsa::Storage<Self>,
     files: HashMap<String, File>,
 }

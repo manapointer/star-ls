@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/star_db",
+    "crates/star_ide",
     "crates/star_ls", 
     "crates/star_syntax",
 ]

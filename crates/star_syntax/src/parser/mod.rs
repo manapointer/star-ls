@@ -219,7 +219,7 @@ pub(crate) fn file(p: &mut Parser) {
 pub fn parse_file(input: &str) -> Parse {
     let mut errors: Vec<String> = Vec::new();
 
-    let tokens = Lexer::from_str(input)
+    let tokens = Lexer::new(input)
         .map(|LexerReturn(token, error)| {
             if let Some(error) = error {
                 errors.push(error);
