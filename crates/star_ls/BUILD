@@ -12,7 +12,10 @@ rust_library(
     name = "star_ls_lib",
     srcs = glob(["src/*.rs"]),
     aliases = aliases,
-    deps = deps + ["//crates/star_syntax"],
+    deps = deps + [
+        "//crates/star_db",
+        "//crates/star_syntax",
+    ],
 )
 
 rust_binary(

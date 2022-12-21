@@ -1,10 +1,9 @@
 use lsp_types::{ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind};
 
-mod db;
 mod errors;
 mod global_state;
-mod ide;
 mod main_loop;
+mod subscriptions;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Result<T, E = Error> = std::result::Result<T, E>;

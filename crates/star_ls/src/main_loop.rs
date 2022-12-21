@@ -1,13 +1,13 @@
-use crate::{global_state::GlobalState, ide::Lines, Result};
+use crate::{global_state::GlobalState, Result};
 use crossbeam_channel::select;
 use lsp_server::{Connection, Message, Notification, Request};
-use lsp_types::{Diagnostic, DiagnosticSeverity, Range, Url};
-use star_syntax::{parse_file, SyntaxElement, SyntaxNode, WalkEvent};
-use std::sync::Arc;
+use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range, Url};
+use star_db::{lines, parse};
+use star_syntax::{SyntaxElement, SyntaxNode, WalkEvent};
 
 #[derive(Debug)]
 pub enum Task {
-    Diagnostics,
+    Diagnostics(Vec<(Url, Vec<Diagnostic>)>),
 }
 
 #[derive(Debug)]
@@ -21,27 +21,20 @@ pub fn main_loop(connection: Connection) -> Result<()> {
 }
 
 impl GlobalState {
-    fn set_document_content(&mut self, uri: Url, text: String) {
-        let mut content = self.content.write().unwrap();
-        let lines = Lines::from_str(&text);
-        content.insert(uri.clone(), Arc::new((text, lines)));
-        self.changes.insert(uri);
-    }
-
     fn did_change_text_document(&mut self, mut params: lsp_types::DidChangeTextDocumentParams) {
         if let Some(change) = params.content_changes.pop() {
-            self.set_document_content(params.text_document.uri, change.text);
+            self.changes.push((params.text_document.uri, change.text));
         }
     }
 
     fn did_open_text_document(&mut self, params: lsp_types::DidOpenTextDocumentParams) {
-        let mut content = self.content.write().unwrap();
-        let lines = Lines::from_str(&params.text_document.text);
-        content.insert(
-            params.text_document.uri.clone(),
-            Arc::new((params.text_document.text, lines)),
-        );
-        self.changes.insert(params.text_document.uri);
+        self.changes
+            .push((params.text_document.uri.clone(), params.text_document.text));
+        self.subscriptions.add(params.text_document.uri);
+    }
+
+    fn did_close_text_document(&mut self, params: lsp_types::DidCloseTextDocumentParams) {
+        self.subscriptions.remove(&params.text_document.uri);
     }
 
     fn recv(&self) -> Option<Event> {
@@ -49,7 +42,7 @@ impl GlobalState {
             recv(self.connection.receiver) -> msg => {
                 msg.ok().map(Event::Lsp)
             }
-            recv(self.thread_pool_receiver) -> task => {
+            recv(self.task_pool.receiver) -> task => {
                 Some(Event::Task(task.unwrap()))
             }
         }
@@ -88,60 +81,100 @@ impl GlobalState {
                         cast_notification::<lsp_types::notification::DidOpenTextDocument>(&not)
                     {
                         self.did_open_text_document(params);
+                    } else if let Some(params) =
+                        cast_notification::<lsp_types::notification::DidCloseTextDocument>(&not)
+                    {
+                        self.did_close_text_document(params);
                     }
                 }
             },
-            Event::Task(task) => {}
+            Event::Task(task) => {
+                self.handle_task(task);
+            }
         }
 
         eprintln!("main loop turn");
 
         // Check changed files.
         let changes = self.take_changes();
+        let content_changed = !changes.is_empty();
+
         eprintln!("processing changes: {}", changes.len());
 
-        for change in changes {
-            // Calculate and update diagnostics.
-            let content = self.content.read().unwrap();
-            let (ref text, ref lines) = **(content.get(&change).unwrap());
+        for (url, text) in changes {
+            self.db.set_file_text(url.to_string(), text);
+        }
 
-            let parse = parse_file(text);
+        let subscriptions_changed = self.subscriptions.take_changed();
 
-            eprintln!("{}", render(parse.syntax()));
-
-            let diagnostics = parse
-                .errors()
-                .iter()
-                .map(|(message, pos)| {
-                    let pos = lines.line_num_and_col(*pos);
-                    Diagnostic {
-                        severity: Some(DiagnosticSeverity::ERROR),
-                        range: Range {
-                            start: pos,
-                            end: pos,
-                        },
-                        message: message.clone(),
-                        ..Default::default()
-                    }
-                })
-                .collect();
-
-            drop(content);
-
-            self.send_notification::<lsp_types::notification::PublishDiagnostics>(
-                lsp_types::PublishDiagnosticsParams::new(change, diagnostics, None),
-            );
+        // If file contents changed, or we opened/closed a file, recalculate diagnostics.
+        if content_changed || subscriptions_changed {
+            self.update_diagnostics();
         }
 
         // Process diagnostic changes.
-        // let diagnostic_changes = self.take_diagnostic_changes();
-        // for url in diagnostic_changes {
-        //     self.send_notification::<lsp_types::notification::PublishDiagnostics>(
-        //         lsp_types::PublishDiagnosticsParams::new(url, vec![], None),
-        //     );
-        // }
+        let diagnostic_changes = self.take_diagnostic_changes();
+        eprintln!("{} diagnostic changes", diagnostic_changes.len());
+        for url in diagnostic_changes {
+            let diagnostic = self.latest_diagnostics.get(&url).cloned().unwrap();
+            self.send_notification::<lsp_types::notification::PublishDiagnostics>(
+                lsp_types::PublishDiagnosticsParams::new(url, diagnostic, None),
+            );
+        }
 
         Ok(())
+    }
+
+    fn handle_task(&mut self, task: Task) {
+        match task {
+            Task::Diagnostics(diagnostics) => {
+                eprintln!("handling task, {:?}", diagnostics);
+
+                for (url, file_diagnostics) in diagnostics {
+                    self.process_incoming_diagnostics(url, file_diagnostics);
+                }
+            }
+        }
+    }
+
+    fn update_diagnostics(&self) {
+        let subscriptions: Vec<Url> = self.subscriptions.iter().cloned().collect();
+
+        let snap = self.db.snapshot();
+        self.task_pool.spawn(move || {
+            let diagnostics = subscriptions
+                .into_iter()
+                .filter_map(|url| {
+                    let files = snap.files.lock().unwrap();
+                    let file = match files.get(url.as_str()) {
+                        Some(file) => file,
+                        None => return None,
+                    };
+                    let lines = lines(&*snap.db, *file);
+                    let parse = parse(&*snap.db, *file);
+                    let diagnostics = parse
+                        .errors()
+                        .iter()
+                        .cloned()
+                        .map(|star_syntax::Diagnostic { message, pos }| {
+                            let (line, character) = lines.line_num_and_col(pos);
+                            let pos = Position { line, character };
+                            Diagnostic {
+                                severity: Some(DiagnosticSeverity::ERROR),
+                                range: Range {
+                                    start: pos,
+                                    end: pos,
+                                },
+                                message,
+                                ..Default::default()
+                            }
+                        })
+                        .collect::<Vec<_>>();
+                    Some((url, diagnostics))
+                })
+                .collect::<Vec<_>>();
+            Task::Diagnostics(diagnostics)
+        })
     }
 }
 

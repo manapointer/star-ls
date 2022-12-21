@@ -1,57 +1,66 @@
 use crossbeam_channel::{Receiver, Sender};
-use lsp_server::{Connection, Message, Notification};
+use lsp_server::{Connection, Message};
 use lsp_types::Url;
+use star_db::SourceDatabase;
 use std::{
     collections::{HashMap, HashSet},
     mem,
-    sync::{Arc, RwLock},
 };
 
-use crate::{db::Database, ide::Lines, main_loop::Task};
+use crate::{main_loop::Task, subscriptions::Subscriptions};
 
 pub(crate) struct GlobalState {
     /// Changes to document contents.
-    pub(crate) changes: HashSet<Url>,
+    pub(crate) changes: Vec<(Url, String)>,
     pub(crate) connection: Connection,
-    pub(crate) content: RwLock<HashMap<Url, Arc<(String, Lines)>>>,
-    pub(crate) db: Database,
+    pub(crate) db: SourceDatabase,
 
     /// Changes to calculated diagnostics.
-    pub(crate) diagnostic_changes: HashSet<Url>,
-    pub(crate) diagnostics_for_url: HashMap<Url, Vec<lsp_types::Diagnostic>>,
-    pub(crate) thread_pool: rayon::ThreadPool,
-    pub(crate) thread_pool_sender: Sender<Task>,
-    pub(crate) thread_pool_receiver: Receiver<Task>,
+    pub(crate) diagnostics_to_sync: HashSet<Url>,
+    pub(crate) latest_diagnostics: HashMap<Url, Vec<lsp_types::Diagnostic>>,
+    pub(crate) task_pool: TaskPool,
+
+    pub(crate) subscriptions: Subscriptions,
 }
 
 impl GlobalState {
     pub(crate) fn new(connection: Connection) -> Self {
-        let (thread_pool_sender, thread_pool_receiver) = crossbeam_channel::unbounded();
         Self {
             changes: Default::default(),
-            diagnostic_changes: Default::default(),
-            diagnostics_for_url: Default::default(),
+            diagnostics_to_sync: Default::default(),
+            latest_diagnostics: Default::default(),
             connection,
-            content: RwLock::default(),
-            db: Database::default(),
-            thread_pool: rayon::ThreadPoolBuilder::new().build().unwrap(),
-            thread_pool_sender,
-            thread_pool_receiver,
+            db: SourceDatabase::default(),
+            task_pool: TaskPool::new(),
+            subscriptions: Default::default(),
         }
     }
 
-    pub(crate) fn update_diagnostics(&mut self, url: Url, diagnostics: Vec<lsp_types::Diagnostic>) {
-        // TODO: Check if diagnostics match, if they do, skip setting.
+    pub(crate) fn process_incoming_diagnostics(
+        &mut self,
+        url: Url,
+        diagnostics: Vec<lsp_types::Diagnostic>,
+    ) {
+        // Check if diagnostics match, if they do, skip setting.
+        let empty = Vec::new();
+        let latest_diagnostic = self.latest_diagnostics.get(&url).unwrap_or(&empty);
 
-        self.diagnostic_changes.insert(url.clone());
-        self.diagnostics_for_url.insert(url, diagnostics);
+        if latest_diagnostic.len() != diagnostics.len()
+            || latest_diagnostic
+                .iter()
+                .zip(diagnostics.iter())
+                .any(|(latest, incoming)| !latest.eq(incoming))
+        {
+            self.diagnostics_to_sync.insert(url.clone());
+            self.latest_diagnostics.insert(url, diagnostics);
+        }
     }
 
     pub(crate) fn take_diagnostic_changes(&mut self) -> HashSet<Url> {
-        mem::take(&mut self.diagnostic_changes)
+        mem::take(&mut self.diagnostics_to_sync)
     }
 
-    pub(crate) fn take_changes(&mut self) -> HashSet<Url> {
+    pub(crate) fn take_changes(&mut self) -> Vec<(Url, String)> {
         mem::take(&mut self.changes)
     }
 
@@ -66,5 +75,47 @@ impl GlobalState {
 
     pub(crate) fn send(&self, msg: Message) {
         self.connection.sender.send(msg).unwrap();
+    }
+}
+
+pub struct TaskPool {
+    pool: rayon::ThreadPool,
+    sender: Sender<Task>,
+    pub(crate) receiver: Receiver<Task>,
+}
+
+impl TaskPool {
+    pub(crate) fn new() -> TaskPool {
+        let (sender, receiver) = crossbeam_channel::unbounded();
+        TaskPool {
+            pool: rayon::ThreadPoolBuilder::new()
+                .panic_handler(|payload| {
+                    if payload.downcast_ref::<salsa::Cancelled>().is_none() {
+                        std::panic::resume_unwind(payload)
+                    }
+                })
+                .build()
+                .unwrap(),
+            sender,
+            receiver,
+        }
+    }
+
+    pub(crate) fn spawn<F>(&self, f: F)
+    where
+        F: FnOnce() -> Task + Send + 'static,
+    {
+        let sender = self.sender.clone();
+        self.pool.spawn(move || {
+            sender.send(f()).unwrap();
+        });
+    }
+
+    pub(crate) fn spawn_with_sender<F>(&self, f: F)
+    where
+        F: FnOnce(Sender<Task>) + Send + 'static,
+    {
+        let sender = self.sender.clone();
+        self.pool.spawn(move || f(sender))
     }
 }

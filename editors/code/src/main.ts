@@ -23,7 +23,7 @@ export function activate() {
   const serverOptions: ServerOptions = { command, options };
 
   const clientOptions: LanguageClientOptions = {
-    documentSelector: [{ scheme: 'file', language: 'plaintext' }],
+    documentSelector: [{ scheme: 'file', language: 'starlark' }],
   };
 
   client = new LanguageClient(

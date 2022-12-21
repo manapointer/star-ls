@@ -48,12 +48,16 @@ pub(crate) fn small_stmt(p: &mut Parser) {
         T![continue] => continue_stmt(p),
         T![pass] => pass_stmt(p),
         kind if EXPR_START.contains(kind) => expression(p),
-        _ => unreachable!(),
+        kind => {
+            eprintln!("wtf: {:?}", kind);
+            p.bump_any();
+        }
     }
 }
 
 pub(crate) fn return_stmt(p: &mut Parser) {
     p.enter(RETURN_STMT);
+    p.bump(T![return]);
     if EXPR_START.contains(p.current()) {
         expression(p);
     }

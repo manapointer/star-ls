@@ -25,7 +25,7 @@ pub struct Lexer<'src> {
 }
 
 impl<'src> Lexer<'src> {
-    pub fn from_str(src: &'src str) -> Self {
+    pub fn new(src: &'src str) -> Self {
         Self {
             chars: src.chars(),
             input: src,
@@ -422,7 +422,7 @@ mod tests {
 
     fn check_lexing(input: &str, expect: Expect) {
         let mut pos = 0;
-        let actual: String = Lexer::from_str(input)
+        let actual: String = Lexer::new(input)
             .map(|LexerReturn(token, diagnostic)| {
                 let start = pos;
                 pos += token.len;

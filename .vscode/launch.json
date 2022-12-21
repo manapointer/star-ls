@@ -18,7 +18,7 @@
                 "<node_internals>/**/*.js"
             ],
             "env": {
-                "__STAR_LSP_SERVER_DEBUG": "${workspaceFolder}/target/debug/star-ls"
+                "__STAR_LSP_SERVER_DEBUG": "${workspaceFolder}/bazel-bin/crates/star_ls/star_ls"
             }
         }
     ],

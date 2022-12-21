@@ -6,7 +6,7 @@
     "vscode": "^1.63.0"
   },
   "activationEvents": [
-    "onLanguage:plaintext"
+    "onLanguage:starlark"
   ],
   "main": "./dist/main",
   "contributes": {

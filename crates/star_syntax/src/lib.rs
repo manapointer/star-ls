@@ -1,4 +1,5 @@
 pub mod lexer;
+pub mod lines;
 pub mod parser;
 pub mod syntax_kind;
 
@@ -25,3 +26,15 @@ pub type SyntaxNode = rowan::SyntaxNode<StarlarkLanguage>;
 pub type SyntaxToken = rowan::SyntaxToken<StarlarkLanguage>;
 pub type SyntaxElement = rowan::NodeOrToken<SyntaxNode, SyntaxToken>;
 pub type WalkEvent = rowan::WalkEvent<SyntaxElement>;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Diagnostic {
+    pub message: String,
+    pub pos: usize,
+}
+
+impl Diagnostic {
+    pub fn new(message: String, pos: usize) -> Diagnostic {
+        Diagnostic { message, pos }
+    }
+}

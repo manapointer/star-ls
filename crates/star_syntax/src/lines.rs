@@ -1,9 +1,10 @@
-pub(crate) struct Lines {
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Lines {
     positions: Vec<usize>,
 }
 
 impl Lines {
-    pub(crate) fn from_str(s: &str) -> Lines {
+    pub fn new(s: &str) -> Lines {
         let mut positions = Vec::new();
         let mut cursor = 0;
 
@@ -17,15 +18,14 @@ impl Lines {
         Lines { positions }
     }
 
-    pub(crate) fn line_num_and_col(&self, pos: usize) -> lsp_types::Position {
+    pub fn line_num_and_col(&self, pos: usize) -> (u32, u32) {
         let index = self.positions.partition_point(|line_pos| *line_pos < pos);
 
         // First line. Simply return position.
-        let (line, character) = if index == 0 {
+        if index == 0 {
             (0, pos as u32)
         } else {
             (index as u32, (pos - self.positions[index - 1] - 1) as u32)
-        };
-        lsp_types::Position { line, character }
+        }
     }
 }
