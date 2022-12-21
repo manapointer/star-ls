@@ -1,7 +1,3 @@
-mod lines;
-
-pub use lines::Lines;
-
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }

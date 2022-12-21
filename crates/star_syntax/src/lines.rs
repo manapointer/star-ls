@@ -1,3 +1,4 @@
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Lines {
     positions: Vec<usize>,
 }

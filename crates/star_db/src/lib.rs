@@ -1,39 +1,69 @@
-use star_syntax::{parse_file, Parse};
-use std::collections::HashMap;
+use salsa::ParallelDatabase;
+use star_syntax::{lines::Lines, parse_file, Parse};
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    hash::Hash,
+    sync::{Arc, Mutex},
+};
 
 #[salsa::jar(db = Db)]
 pub struct Jar(lines, parse, File);
 
 pub trait Db: salsa::DbWithJar<Jar> {}
 
-#[salsa::db(Jar)]
 #[derive(Default)]
+#[salsa::db(Jar)]
 pub struct Database {
     storage: salsa::Storage<Self>,
-    files: HashMap<String, File>,
-}
-
-impl Database {
-    pub fn set_file_text(&mut self, path: String, text: String) {
-        match self.files.get_mut(&path) {
-            Some(file) => {
-                file.set_text(self).to(text);
-            }
-            None => {
-                self.files.insert(path, File::new(self, text));
-            }
-        }
-    }
 }
 
 impl Db for Database {}
 
 impl salsa::Database for Database {}
 
+impl salsa::ParallelDatabase for Database {
+    fn snapshot(&self) -> salsa::Snapshot<Self> {
+        salsa::Snapshot::new(Database {
+            storage: self.storage.snapshot(),
+        })
+    }
+}
+
 #[salsa::input]
 pub struct File {
     #[return_ref]
     text: String,
+}
+
+#[derive(Default)]
+pub struct SourceDatabase {
+    db: Database,
+    files: Arc<Mutex<HashMap<String, File>>>,
+}
+
+impl SourceDatabase {
+    pub fn set_file_text(&mut self, path: String, text: String) {
+        match self.files.lock().unwrap().entry(path) {
+            Entry::Occupied(entry) => {
+                entry.get().set_text(&mut self.db).to(text);
+            }
+            Entry::Vacant(entry) => {
+                entry.insert(File::new(&self.db, text));
+            }
+        }
+    }
+
+    pub fn snapshot(&self) -> SourceDatabaseSnapshot {
+        SourceDatabaseSnapshot {
+            db: self.db.snapshot(),
+            files: Arc::clone(&self.files),
+        }
+    }
+}
+
+pub struct SourceDatabaseSnapshot {
+    pub db: salsa::Snapshot<Database>,
+    pub files: Arc<Mutex<HashMap<String, File>>>,
 }
 
 #[salsa::tracked]
@@ -42,34 +72,6 @@ pub fn parse(db: &dyn Db, file: File) -> Parse {
 }
 
 #[salsa::tracked]
-pub fn lines(db: &dyn Db, file: File) {}
-
-// let content = self.content.read().unwrap();
-// let (ref text, ref lines) = **(content.get(&change).unwrap());
-
-// let parse = parse_file(text);
-
-// eprintln!("{}", render(parse.syntax()));
-
-// let diagnostics = parse
-//     .errors()
-//     .iter()
-//     .map(|(message, pos)| {
-//         let pos = lines.line_num_and_col(*pos);
-//         Diagnostic {
-//             severity: Some(DiagnosticSeverity::ERROR),
-//             range: Range {
-//                 start: pos,
-//                 end: pos,
-//             },
-//             message: message.clone(),
-//             ..Default::default()
-//         }
-//     })
-//     .collect();
-
-// drop(content);
-
-// self.send_notification::<lsp_types::notification::PublishDiagnostics>(
-//     lsp_types::PublishDiagnosticsParams::new(change, diagnostics, None),
-// );
+pub fn lines(db: &dyn Db, file: File) -> Lines {
+    Lines::new(file.text(db))
+}

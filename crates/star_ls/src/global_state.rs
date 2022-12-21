@@ -1,7 +1,7 @@
 use crossbeam_channel::{Receiver, Sender};
-use lsp_server::{Connection, Message, Notification};
+use lsp_server::{Connection, Message};
 use lsp_types::Url;
-use star_db::Database;
+use star_db::SourceDatabase;
 use std::{
     collections::{HashMap, HashSet},
     mem,
@@ -13,7 +13,7 @@ pub(crate) struct GlobalState {
     /// Changes to document contents.
     pub(crate) changes: Vec<(Url, String)>,
     pub(crate) connection: Connection,
-    pub(crate) db: Database,
+    pub(crate) db: SourceDatabase,
 
     /// Changes to calculated diagnostics.
     pub(crate) diagnostics_to_sync: HashSet<Url>,
@@ -30,7 +30,7 @@ impl GlobalState {
             diagnostics_to_sync: Default::default(),
             latest_diagnostics: Default::default(),
             connection,
-            db: Database::default(),
+            db: SourceDatabase::default(),
             task_pool: TaskPool::new(),
             subscriptions: Default::default(),
         }
@@ -88,9 +88,16 @@ impl TaskPool {
     pub(crate) fn new() -> TaskPool {
         let (sender, receiver) = crossbeam_channel::unbounded();
         TaskPool {
-            pool: rayon::ThreadPoolBuilder::new().build().unwrap(),
-            sender: sender,
-            receiver: receiver,
+            pool: rayon::ThreadPoolBuilder::new()
+                .panic_handler(|payload| {
+                    if payload.downcast_ref::<salsa::Cancelled>().is_none() {
+                        std::panic::resume_unwind(payload)
+                    }
+                })
+                .build()
+                .unwrap(),
+            sender,
+            receiver,
         }
     }
 

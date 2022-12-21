@@ -1,4 +1,5 @@
 pub mod lexer;
+pub mod lines;
 pub mod parser;
 pub mod syntax_kind;
 
@@ -28,8 +29,8 @@ pub type WalkEvent = rowan::WalkEvent<SyntaxElement>;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Diagnostic {
-    message: String,
-    pos: usize,
+    pub message: String,
+    pub pos: usize,
 }
 
 impl Diagnostic {

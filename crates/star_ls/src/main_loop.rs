@@ -1,9 +1,9 @@
 use crate::{global_state::GlobalState, Result};
 use crossbeam_channel::select;
 use lsp_server::{Connection, Message, Notification, Request};
-use lsp_types::{Diagnostic, Url};
+use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range, Url};
+use star_db::{lines, parse};
 use star_syntax::{SyntaxElement, SyntaxNode, WalkEvent};
-use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum Task {
@@ -102,7 +102,7 @@ impl GlobalState {
         eprintln!("processing changes: {}", changes.len());
 
         for (url, text) in changes {
-            self.db.set_file_text(url.to_string(), text);
+            // self.db.set_file_text(url.to_string(), text);
         }
 
         let subscriptions_changed = self.subscriptions.take_changed();
@@ -135,10 +135,42 @@ impl GlobalState {
     }
 
     fn update_diagnostics(&self) {
-        self.task_pool.spawn_with_sender(|sender| {
-            if let Ok(task) = salsa::Cancelled::catch(|| Task::Diagnostics(Vec::new())) {
-                sender.send(task).unwrap()
-            }
+        let subscriptions: Vec<Url> = self.subscriptions.iter().cloned().collect();
+
+        let snap = self.db.snapshot();
+        self.task_pool.spawn(move || {
+            let diagnostics = subscriptions
+                .into_iter()
+                .filter_map(|url| {
+                    let files = snap.files.lock().unwrap();
+                    let file = match files.get(url.as_str()) {
+                        Some(file) => file,
+                        None => return None,
+                    };
+                    let lines = lines(&*snap.db, *file);
+                    let parse = parse(&*snap.db, *file);
+                    let diagnostics = parse
+                        .errors()
+                        .iter()
+                        .cloned()
+                        .map(|star_syntax::Diagnostic { message, pos }| {
+                            let (line, character) = lines.line_num_and_col(pos);
+                            let pos = Position { line, character };
+                            Diagnostic {
+                                severity: Some(DiagnosticSeverity::ERROR),
+                                range: Range {
+                                    start: pos,
+                                    end: pos,
+                                },
+                                message,
+                                ..Default::default()
+                            }
+                        })
+                        .collect::<Vec<_>>();
+                    Some((url, diagnostics))
+                })
+                .collect::<Vec<_>>();
+            Task::Diagnostics(diagnostics)
         })
     }
 }
