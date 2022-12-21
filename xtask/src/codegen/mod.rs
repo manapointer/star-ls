@@ -1,7 +1,6 @@
-use star_syntax::parse_file;
 use std::{
     collections::HashMap,
-    env, mem,
+    env, fs, mem,
     path::{Path, PathBuf},
 };
 
@@ -84,23 +83,25 @@ pub fn run() -> Result<(), anyhow::Error> {
     //   Parse all blocks
 
     let text = "
-    
+// test bin_op_add
 // x + y
 
 // test def_stmt
 // def foo():
-//   pass";
+//     pass";
 
-    // println!("writing to {}", project_root().display());
     let blocks = extract_comment_blocks(text);
 
     add_tests_from_comment_blocks(&mut tests, &blocks);
 
-    eprintln!("{:?}", tests);
+    let tests_dir = project_root().join(Path::new("crates/star_syntax/src/parser/test_data"));
+    if !tests_dir.is_dir() {
+        fs::create_dir(&tests_dir)?;
+    }
 
     for test in tests.values() {
-        let parse = parse_file(&test.text);
-        println!("{}", star_syntax::render(parse.syntax()));
+        let path = tests_dir.join(format!("{}.star", test.name));
+        fs::write(path, &test.text)?;
     }
 
     Ok(())
