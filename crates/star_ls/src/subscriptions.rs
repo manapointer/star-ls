@@ -14,7 +14,7 @@ impl Subscriptions {
     }
 
     pub(crate) fn remove(&mut self, url: &Url) {
-        self.urls.remove(&url);
+        self.urls.remove(url);
     }
 
     pub(crate) fn take_changed(&mut self) -> bool {

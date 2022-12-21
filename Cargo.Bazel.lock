@@ -1,5 +1,5 @@
 {
-  "checksum": "95d54e8c79bc1c03f0a7114999a3f30f2bee0e0122acc9f20b0106fe737ad252",
+  "checksum": "377c953c780fb8a16b5a8123bbda0f57c179ce1db54c249202d5cb66dd1d9121",
   "crates": {
     "ahash 0.7.6": {
       "name": "ahash",
@@ -2531,9 +2531,9 @@
       "version": "0.1.0",
       "repository": {
         "Git": {
-          "remote": "https://github.com/salsa-rs/salsa",
+          "remote": "https://github.com/manapointer/salsa",
           "commitish": {
-            "Rev": "252d21e358979cd684666ebc32d2bc49d6f1d3f0"
+            "Rev": "4d7ca00e8cc150941f5ff9244925f61441fb5c0b"
           },
           "shallow_since": "1669697685 +0000",
           "strip_prefix": "components/salsa-2022"
@@ -2622,9 +2622,9 @@
       "version": "0.1.0",
       "repository": {
         "Git": {
-          "remote": "https://github.com/salsa-rs/salsa",
+          "remote": "https://github.com/manapointer/salsa",
           "commitish": {
-            "Rev": "252d21e358979cd684666ebc32d2bc49d6f1d3f0"
+            "Rev": "4d7ca00e8cc150941f5ff9244925f61441fb5c0b"
           },
           "shallow_since": "1669697685 +0000",
           "strip_prefix": "components/salsa-2022-macros"

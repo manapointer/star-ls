@@ -116,6 +116,6 @@ impl TaskPool {
         F: FnOnce(Sender<Task>) + Send + 'static,
     {
         let sender = self.sender.clone();
-        self.pool.spawn(move || f(sender))
+        self.pool.spawn(move || f(sender));
     }
 }

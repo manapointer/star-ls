@@ -93,16 +93,15 @@ impl GlobalState {
             }
         }
 
-        eprintln!("main loop turn");
-
         // Check changed files.
         let changes = self.take_changes();
         let content_changed = !changes.is_empty();
 
-        eprintln!("processing changes: {}", changes.len());
-
-        for (url, text) in changes {
-            self.db.set_file_text(url.to_string(), text);
+        if !changes.is_empty() {
+            self.db.cancel();
+            for (url, text) in changes {
+                self.db.set_file_text(url.to_string(), text);
+            }
         }
 
         let subscriptions_changed = self.subscriptions.take_changed();
@@ -114,7 +113,6 @@ impl GlobalState {
 
         // Process diagnostic changes.
         let diagnostic_changes = self.take_diagnostic_changes();
-        eprintln!("{} diagnostic changes", diagnostic_changes.len());
         for url in diagnostic_changes {
             let diagnostic = self.latest_diagnostics.get(&url).cloned().unwrap();
             self.send_notification::<lsp_types::notification::PublishDiagnostics>(
@@ -128,8 +126,6 @@ impl GlobalState {
     fn handle_task(&mut self, task: Task) {
         match task {
             Task::Diagnostics(diagnostics) => {
-                eprintln!("handling task, {:?}", diagnostics);
-
                 for (url, file_diagnostics) in diagnostics {
                     self.process_incoming_diagnostics(url, file_diagnostics);
                 }
@@ -140,41 +136,56 @@ impl GlobalState {
     fn update_diagnostics(&self) {
         let subscriptions: Vec<Url> = self.subscriptions.iter().cloned().collect();
 
-        let snap = self.db.snapshot();
-        self.task_pool.spawn(move || {
-            let diagnostics = subscriptions
-                .into_iter()
-                .filter_map(|url| {
-                    let files = snap.files.lock().unwrap();
-                    let file = match files.get(url.as_str()) {
-                        Some(file) => file,
-                        None => return None,
-                    };
-                    let lines = lines(&*snap.db, *file);
-                    let parse = parse(&*snap.db, *file);
-                    let diagnostics = parse
-                        .errors()
-                        .iter()
-                        .cloned()
-                        .map(|star_syntax::Diagnostic { message, pos }| {
-                            let (line, character) = lines.line_num_and_col(pos);
-                            let pos = Position { line, character };
-                            Diagnostic {
-                                severity: Some(DiagnosticSeverity::ERROR),
-                                range: Range {
-                                    start: pos,
-                                    end: pos,
-                                },
-                                message,
-                                ..Default::default()
+        let mut snap = self.db.snapshot();
+        self.task_pool.spawn_with_sender(move |sender| {
+            let snap = std::panic::AssertUnwindSafe(&mut snap);
+            let diagnostics = match salsa::Cancelled::catch(|| {
+                subscriptions
+                    .into_iter()
+                    .filter_map(|url| {
+                        let file = {
+                            let files = snap.files.lock().unwrap();
+                            match files.get(url.as_str()).cloned() {
+                                Some(file) => file,
+                                None => return None,
                             }
-                        })
-                        .collect::<Vec<_>>();
-                    Some((url, diagnostics))
-                })
-                .collect::<Vec<_>>();
-            Task::Diagnostics(diagnostics)
-        })
+                        };
+
+                        let lines = lines(&*snap.db, file);
+                        let parse = parse(&*snap.db, file);
+
+                        let diagnostics = parse
+                            .errors()
+                            .iter()
+                            .cloned()
+                            .map(|star_syntax::Diagnostic { message, pos }| {
+                                let pos = {
+                                    let (line, character) = lines.line_num_and_col(pos);
+                                    Position { line, character }
+                                };
+                                Diagnostic {
+                                    severity: Some(DiagnosticSeverity::ERROR),
+                                    range: Range {
+                                        start: pos,
+                                        end: pos,
+                                    },
+                                    message,
+                                    ..Default::default()
+                                }
+                            })
+                            .collect::<Vec<_>>();
+                        Some((url, diagnostics))
+                    })
+                    .collect::<Vec<_>>()
+            }) {
+                Ok(diagnostics) => diagnostics,
+                Err(_) => {
+                    return;
+                }
+            };
+
+            sender.send(Task::Diagnostics(diagnostics)).unwrap();
+        });
     }
 }
 

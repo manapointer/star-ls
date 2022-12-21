@@ -1,4 +1,4 @@
-use salsa::ParallelDatabase;
+use salsa::{Database, Durability, ParallelDatabase};
 use star_syntax::{lines::Lines, parse_file, Parse};
 use std::{
     collections::{hash_map::Entry, HashMap},
@@ -13,17 +13,17 @@ pub trait Db: salsa::DbWithJar<Jar> {}
 
 #[derive(Default)]
 #[salsa::db(Jar)]
-pub struct Database {
+pub struct RootDatabase {
     storage: salsa::Storage<Self>,
 }
 
-impl Db for Database {}
+impl Db for RootDatabase {}
 
-impl salsa::Database for Database {}
+impl salsa::Database for RootDatabase {}
 
-impl salsa::ParallelDatabase for Database {
+impl salsa::ParallelDatabase for RootDatabase {
     fn snapshot(&self) -> salsa::Snapshot<Self> {
-        salsa::Snapshot::new(Database {
+        salsa::Snapshot::new(RootDatabase {
             storage: self.storage.snapshot(),
         })
     }
@@ -37,8 +37,8 @@ pub struct File {
 
 #[derive(Default)]
 pub struct SourceDatabase {
-    db: Database,
-    files: Arc<Mutex<HashMap<String, File>>>,
+    pub db: RootDatabase,
+    pub files: Arc<Mutex<HashMap<String, File>>>,
 }
 
 impl SourceDatabase {
@@ -53,6 +53,10 @@ impl SourceDatabase {
         }
     }
 
+    pub fn cancel(&mut self) {
+        self.db.synthetic_write(Durability::LOW);
+    }
+
     pub fn snapshot(&self) -> SourceDatabaseSnapshot {
         SourceDatabaseSnapshot {
             db: self.db.snapshot(),
@@ -62,7 +66,7 @@ impl SourceDatabase {
 }
 
 pub struct SourceDatabaseSnapshot {
-    pub db: salsa::Snapshot<Database>,
+    pub db: salsa::Snapshot<RootDatabase>,
     pub files: Arc<Mutex<HashMap<String, File>>>,
 }
 
@@ -73,5 +77,7 @@ pub fn parse(db: &dyn Db, file: File) -> Parse {
 
 #[salsa::tracked]
 pub fn lines(db: &dyn Db, file: File) -> Lines {
+    std::thread::sleep(std::time::Duration::from_secs(2));
+
     Lines::new(file.text(db))
 }
