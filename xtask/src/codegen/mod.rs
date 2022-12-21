@@ -1,3 +1,4 @@
+use star_syntax::parse_file;
 use std::{
     collections::HashMap,
     env, mem,
@@ -96,6 +97,11 @@ pub fn run() -> Result<(), anyhow::Error> {
     add_tests_from_comment_blocks(&mut tests, &blocks);
 
     eprintln!("{:?}", tests);
+
+    for test in tests.values() {
+        let parse = parse_file(&test.text);
+        println!("{}", star_syntax::render(parse.syntax()));
+    }
 
     Ok(())
 }
