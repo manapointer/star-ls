@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
+star_syntax = { path = "../crates/star_syntax" }
