@@ -18,12 +18,10 @@ fn collect_star_files(test_dir: &Path, subdir: &str) -> Result<Vec<(PathBuf, Str
     let full_subdir = test_dir.join(subdir);
     for entry in fs::read_dir(&full_subdir)? {
         let entry = entry?;
-        let name = entry.file_name();
-        let name = name.to_str().unwrap();
-        if !name.ends_with(".star") || !entry.file_type()?.is_file() {
+        let path = entry.path();
+        if path.extension().unwrap_or_default() != "star" || !entry.file_type()?.is_file() {
             continue;
         }
-        let path = full_subdir.join(name);
         let code = fs::read_to_string(&path)?;
         res.push((path, code));
     }

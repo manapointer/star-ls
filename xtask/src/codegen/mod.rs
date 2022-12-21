@@ -57,19 +57,27 @@ fn add_tests_from_comment_blocks(tests: &mut HashMap<String, Test>, blocks: &[Co
         if block.lines.is_empty() {
             continue;
         }
-        let header = block.lines[0].trim_start();
-        let name = {
-            let mut parts = header.split_ascii_whitespace();
-            if parts.next() != Some("test") {
-                continue;
+
+        let mut lines = block.lines.iter().map(|s| s.as_str());
+
+        let name = match {
+            loop {
+                match lines.next() {
+                    Some(line) => {
+                        let mut parts = line.trim_start().split_ascii_whitespace();
+                        if let (Some("test"), Some(name)) = (parts.next(), parts.next()) {
+                            break Some(name);
+                        }
+                    }
+                    None => break None,
+                }
             }
-            match parts.next() {
-                Some(name) => name,
-                None => continue,
-            }
+        } {
+            Some(name) => name,
+            None => continue,
         };
 
-        let text = block.lines[1..].join("\n");
+        let text = lines.collect::<Vec<_>>().join("\n");
         if !text.is_empty() {
             tests.insert(name.to_string(), Test::new(name.to_string(), text));
         }
@@ -79,20 +87,18 @@ fn add_tests_from_comment_blocks(tests: &mut HashMap<String, Test>, blocks: &[Co
 pub fn run() -> Result<(), anyhow::Error> {
     let mut tests: HashMap<String, Test> = HashMap::new();
 
-    // For each .rs file in crates/star_syntax/src/parser
-    //   Parse all blocks
+    let dir = project_root().join(Path::new("crates/star_syntax/src/parser"));
+    for entry in fs::read_dir(&dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.extension().unwrap_or_default() != "rs" || !entry.file_type()?.is_file() {
+            continue;
+        }
+        let code = fs::read_to_string(&path)?;
+        let blocks = extract_comment_blocks(&code);
 
-    let text = "
-// test bin_op_add
-// x + y
-
-// test def_stmt
-// def foo():
-//     pass";
-
-    let blocks = extract_comment_blocks(text);
-
-    add_tests_from_comment_blocks(&mut tests, &blocks);
+        add_tests_from_comment_blocks(&mut tests, &blocks);
+    }
 
     let tests_dir = project_root().join(Path::new("crates/star_syntax/src/parser/test_data"));
     if !tests_dir.is_dir() {

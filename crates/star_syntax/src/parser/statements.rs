@@ -55,6 +55,9 @@ pub(crate) fn small_stmt(p: &mut Parser) {
     }
 }
 
+// test return_stmt
+// return
+// return 1
 pub(crate) fn return_stmt(p: &mut Parser) {
     p.enter(RETURN_STMT);
     p.bump(T![return]);
@@ -65,6 +68,8 @@ pub(crate) fn return_stmt(p: &mut Parser) {
 }
 
 // BreakStmt = 'break'
+// test break_stmt
+// break
 pub(crate) fn break_stmt(p: &mut Parser) {
     p.enter(BREAK_STMT);
     p.bump(T![break]);
@@ -72,6 +77,8 @@ pub(crate) fn break_stmt(p: &mut Parser) {
 }
 
 // ContinueStmt = 'continue'
+// test continue_stmt
+// continue
 pub(crate) fn continue_stmt(p: &mut Parser) {
     p.enter(CONTINUE_STMT);
     p.bump(T![continue]);
@@ -79,12 +86,17 @@ pub(crate) fn continue_stmt(p: &mut Parser) {
 }
 
 // PassStmt = 'pass'
+// test pass_stmt
+// pass
 pub(crate) fn pass_stmt(p: &mut Parser) {
     p.enter(PASS_STMT);
     p.bump(T![pass]);
     p.exit();
 }
 
+// test def_stmt
+// def hello():
+//     pass
 pub(crate) fn def_stmt(p: &mut Parser) {
     p.enter(DEF_STMT);
     p.eat(T![def]);
