@@ -3,6 +3,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use expect_test::{expect_file, Expect};
+
+use crate::{parse_file, render};
+
 fn project_root() -> PathBuf {
     Path::new(
         &env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| env!("CARGO_MANIFEST_DIR").to_string()),
@@ -36,7 +40,15 @@ fn dir_tests() {
     )
     .unwrap();
 
-    for (_, code) in star_files {
-        eprintln!("{}", code);
+    for (path, input) in star_files {
+        let ast_path = path.with_extension("star.ast");
+        check(&input, ast_path);
     }
+}
+
+fn check(input: &str, expect_path: PathBuf) {
+    let parse = parse_file(input);
+    let rendered = render(parse.syntax());
+    let expect = expect_file![expect_path];
+    expect.assert_eq(&rendered);
 }
