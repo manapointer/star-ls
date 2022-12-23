@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::{global_state::GlobalState, Result};
 use crossbeam_channel::select;
 use lsp_server::{Connection, Message, Notification, Request};
@@ -150,7 +152,6 @@ impl GlobalState {
                                 None => return None,
                             }
                         };
-
                         let lines = lines(&*snap.db, file);
                         let parse = parse(&*snap.db, file);
 
