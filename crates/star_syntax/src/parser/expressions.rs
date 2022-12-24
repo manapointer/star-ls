@@ -149,10 +149,17 @@ pub(crate) fn primary_expr(p: &mut Parser) {
     atom_expr(p);
     loop {
         match p.current() {
+            // test dot_expr
+            // a.b
+            // a.b.c
             T![.] => {
                 p.enter_at(checkpoint, DOT_EXPR);
                 p.bump(T![.]);
+
+                // test_err dot_expr_no_ident
+                // a.
                 p.expect(T![ident]);
+                p.exit();
             }
             T!['['] => {
                 p.enter_at(checkpoint, SLICE_EXPR);

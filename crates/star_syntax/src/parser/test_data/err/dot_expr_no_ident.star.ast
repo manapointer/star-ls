@@ -1,0 +1,7 @@
+ FILE@0..0 "a."
+  SIMPLE_STMT@0..0 "a."
+    DOT_EXPR@0..0 "a."
+      IDENT@0..1 "a"
+      DOT@1..2 "."
+    NEWLINE@2..2 ""
+2:expected IDENT

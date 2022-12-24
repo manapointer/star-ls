@@ -226,8 +226,6 @@ pub fn parse_file(input: &str) -> Parse {
         })
         .collect::<Vec<_>>();
 
-    eprintln!("{:?}", tokens);
-
     let mut p = Parser::new(tokens, input);
     file(&mut p);
 
