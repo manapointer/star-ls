@@ -24,7 +24,7 @@ pub(crate) fn argument(p: &mut Parser) {
         _ => unreachable!(),
     }
 
-    if p.at(T![ident]) && p.at(T![=]) {
+    if p.at(T![ident]) && p.nth_at(1, T![=]) {
         p.bump(T![ident]);
         p.bump(T![=]);
         test(p);

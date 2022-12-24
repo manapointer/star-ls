@@ -16,6 +16,7 @@ mod suite;
 #[cfg(test)]
 mod tests;
 
+use arguments::*;
 use expressions::*;
 use params::*;
 use statements::*;

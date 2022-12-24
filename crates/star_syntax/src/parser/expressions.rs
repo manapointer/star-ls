@@ -161,6 +161,22 @@ pub(crate) fn primary_expr(p: &mut Parser) {
                 p.expect(T![ident]);
                 p.exit();
             }
+
+            // test call_expr
+            // foo()
+            // foo(1)
+            // foo(1, a=1+2, *b, **c)
+            T!['('] => {
+                p.enter_at(checkpoint, CALL_EXPR);
+                p.bump(T!['(']);
+                if ARGUMENT_START.contains(p.current()) {
+                    arguments(p);
+                    p.eat(T![,]);
+                }
+                // TODO: Recover strategy
+                p.expect(T![')']);
+                p.exit();
+            }
             T!['['] => {
                 p.enter_at(checkpoint, SLICE_EXPR);
                 p.bump(T!['[']);
@@ -208,7 +224,6 @@ pub(crate) fn primary_expr(p: &mut Parser) {
                     p.exit();
                 }
             }
-            T!['('] => {}
             _ => break,
         }
     }
