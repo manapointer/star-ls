@@ -8,11 +8,11 @@ pub fn render(syntax: SyntaxNode, diagnostics: Vec<Diagnostic>) -> String {
         match event {
             WalkEvent::Enter(node) => {
                 let text = match &node {
-                    SyntaxElement::Node(it) => it.text().to_string(),
-                    SyntaxElement::Token(it) => it.text().to_string(),
+                    SyntaxElement::Token(it) => format!(" {:?}", it.text()),
+                    _ => "".to_string(),
                 };
                 buf.push_str(&format!(
-                    "{:indent$}{:?}@{:?}..{:?} {:?}\n",
+                    "{:indent$}{:?}@{:?}..{:?}{}\n",
                     " ",
                     node.kind(),
                     node.text_range().start(),

@@ -1,0 +1,63 @@
+ FILE@0..58
+  SIMPLE_STMT@0..7
+    BINARY_EXPR@0..6
+      INT@0..1 "1"
+      WHITESPACE@1..2 " "
+      OR_KW@2..4 "or"
+      WHITESPACE@4..5 " "
+      INT@5..6 "2"
+    NEWLINE@6..7 "\n"
+  SIMPLE_STMT@7..26
+    BINARY_EXPR@7..25
+      BINARY_EXPR@7..14
+        INT@7..8 "1"
+        WHITESPACE@8..9 " "
+        AND_KW@9..12 "and"
+        WHITESPACE@12..13 " "
+        INT@13..14 "2"
+      WHITESPACE@14..15 " "
+      OR_KW@15..17 "or"
+      WHITESPACE@17..18 " "
+      BINARY_EXPR@18..25
+        INT@18..19 "3"
+        WHITESPACE@19..20 " "
+        AND_KW@20..23 "and"
+        WHITESPACE@23..24 " "
+        INT@24..25 "4"
+    NEWLINE@25..26 "\n"
+  SIMPLE_STMT@26..44
+    BINARY_EXPR@26..43
+      BINARY_EXPR@26..32
+        INT@26..27 "1"
+        WHITESPACE@27..28 " "
+        EQ_EQ@28..30 "=="
+        WHITESPACE@30..31 " "
+        INT@31..32 "2"
+      WHITESPACE@32..33 " "
+      AND_KW@33..36 "and"
+      WHITESPACE@36..37 " "
+      BINARY_EXPR@37..43
+        INT@37..38 "3"
+        WHITESPACE@38..39 " "
+        EQ_EQ@39..41 "=="
+        WHITESPACE@41..42 " "
+        INT@42..43 "4"
+    NEWLINE@43..44 "\n"
+  SIMPLE_STMT@44..58
+    BINARY_EXPR@44..58
+      BINARY_EXPR@44..49
+        INT@44..45 "1"
+        WHITESPACE@45..46 " "
+        OR@46..47 "|"
+        WHITESPACE@47..48 " "
+        INT@48..49 "2"
+      WHITESPACE@49..50 " "
+      EQ_EQ@50..52 "=="
+      WHITESPACE@52..53 " "
+      BINARY_EXPR@53..58
+        INT@53..54 "3"
+        WHITESPACE@54..55 " "
+        OR@55..56 "|"
+        WHITESPACE@56..57 " "
+        INT@57..58 "4"
+    NEWLINE@58..58 ""

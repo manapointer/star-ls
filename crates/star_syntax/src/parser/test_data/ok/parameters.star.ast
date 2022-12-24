@@ -1,39 +1,39 @@
- FILE@0..36 "def foo(x, y=1+2, *z, **w):\n    pass"
-  DEF_STMT@0..36 "def foo(x, y=1+2, *z, **w):\n    pass"
+ FILE@0..36
+  DEF_STMT@0..36
     DEF_KW@0..3 "def"
     WHITESPACE@3..4 " "
     IDENT@4..7 "foo"
     L_PAREN@7..8 "("
-    PARAMETERS@8..25 "x, y=1+2, *z, **w"
-      PARAMETER@8..9 "x"
+    PARAMETERS@8..25
+      PARAMETER@8..9
         IDENT@8..9 "x"
       COMMA@9..10 ","
       WHITESPACE@10..11 " "
-      PARAMETER@11..16 "y=1+2"
+      PARAMETER@11..16
         IDENT@11..12 "y"
         EQ@12..13 "="
-        BINARY_EXPR@13..16 "1+2"
+        BINARY_EXPR@13..16
           INT@13..14 "1"
           PLUS@14..15 "+"
           INT@15..16 "2"
       COMMA@16..17 ","
       WHITESPACE@17..18 " "
-      PARAMETER@18..20 "*z"
+      PARAMETER@18..20
         STAR@18..19 "*"
         IDENT@19..20 "z"
       COMMA@20..21 ","
       WHITESPACE@21..22 " "
-      PARAMETER@22..25 "**w"
+      PARAMETER@22..25
         STAR_STAR@22..24 "**"
         IDENT@24..25 "w"
     R_PAREN@25..26 ")"
     COLON@26..27 ":"
-    SUITE@27..36 "\n    pass"
+    SUITE@27..36
       NEWLINE@27..28 "\n"
       WHITESPACE@28..32 "    "
       INDENT@32..32 ""
-      SIMPLE_STMT@32..36 "pass"
-        PASS_STMT@32..36 "pass"
+      SIMPLE_STMT@32..36
+        PASS_STMT@32..36
           PASS_KW@32..36 "pass"
         NEWLINE@36..36 ""
       OUTDENT@36..36 ""

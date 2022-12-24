@@ -1,10 +1,10 @@
- FILE@0..15 "return\nreturn 1"
-  SIMPLE_STMT@0..7 "return\n"
-    RETURN_STMT@0..6 "return"
+ FILE@0..15
+  SIMPLE_STMT@0..7
+    RETURN_STMT@0..6
       RETURN_KW@0..6 "return"
     NEWLINE@6..7 "\n"
-  SIMPLE_STMT@7..15 "return 1"
-    RETURN_STMT@7..15 "return 1"
+  SIMPLE_STMT@7..15
+    RETURN_STMT@7..15
       RETURN_KW@7..13 "return"
       WHITESPACE@13..14 " "
       INT@14..15 "1"

@@ -19,8 +19,14 @@ pub(crate) fn parse_assign_or_expression(p: &mut Parser) {
     let checkpoint = p.checkpoint();
 }
 
+// test comma_expr
+// 1, 2
 pub(crate) fn expression(p: &mut Parser) {
     test(p);
+    while p.at(T![,]) && EXPR_START.contains(p.nth(1)) {
+        p.bump(T![,]);
+        test(p);
+    }
 }
 
 pub(crate) fn test(p: &mut Parser) {
@@ -42,6 +48,11 @@ pub(crate) fn test(p: &mut Parser) {
 //     }
 // }
 
+// test or_expr
+// 1 or 2
+// 1 and 2 or 3 and 4
+// 1 == 2 and 3 == 4
+// 1 | 2 == 3 | 4
 pub(crate) fn or_expr(p: &mut Parser) {
     let checkpoint = p.checkpoint();
     and_expr(p);

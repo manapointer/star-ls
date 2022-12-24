@@ -48,7 +48,7 @@ pub(crate) fn small_stmt(p: &mut Parser) {
         T![continue] => continue_stmt(p),
         T![pass] => pass_stmt(p),
         kind if EXPR_START.contains(kind) => expression(p),
-        kind => {
+        _ => {
             p.bump_any();
         }
     }
