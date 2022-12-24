@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::{global_state::GlobalState, Result};
 use crossbeam_channel::select;
 use lsp_server::{Connection, Message, Notification, Request};
@@ -150,7 +152,6 @@ impl GlobalState {
                                 None => return None,
                             }
                         };
-
                         let lines = lines(&*snap.db, file);
                         let parse = parse(&*snap.db, file);
 
@@ -214,52 +215,3 @@ where
         None
     }
 }
-
-fn render(syntax: SyntaxNode) -> String {
-    let mut buf = String::new();
-    let mut indent = 0;
-    let mut start = 0;
-    let mut pos = 0;
-
-    for event in syntax.preorder_with_tokens() {
-        match event {
-            WalkEvent::Enter(node) => {
-                let text = match &node {
-                    SyntaxElement::Node(it) => it.text().to_string(),
-                    SyntaxElement::Token(it) => {
-                        start = pos;
-                        pos += it.text().len();
-                        it.text().to_string()
-                    }
-                };
-                buf.push_str(&format!(
-                    "{:indent$}{:?}@{}..{} {:?}\n",
-                    " ",
-                    node.kind(),
-                    start,
-                    pos,
-                    text,
-                    indent = indent
-                ));
-                indent += 2;
-            }
-            WalkEvent::Leave(_) => indent -= 2,
-        }
-    }
-
-    buf
-}
-
-// fn print(indent: usize, element: SyntaxElement) {
-//     let kind: SyntaxKind = element.kind().into();
-//     eprint!("{:indent$}", "", indent = indent);
-//     match element {
-//         SyntaxElement::Node(node) => {
-//             eprintln!("- {:?}", kind);
-//             for child in node.children_with_tokens() {
-//                 print(indent + 2, child);
-//             }
-//         }
-//         SyntaxElement::Token(token) => eprintln!("- {:?} {:?}", token.text(), kind),
-//     }
-// }

@@ -4,4 +4,5 @@ members = [
     "crates/star_ide",
     "crates/star_ls", 
     "crates/star_syntax",
+    "xtask",
 ]

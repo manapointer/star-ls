@@ -207,10 +207,8 @@ impl<'a> Parser<'a> {
 }
 
 pub(crate) fn file(p: &mut Parser) {
-    // p.builder.start_node(FILE.into());
     p.enter(FILE);
     while !p.at(EOF) {
-        eprintln!("{:?}", p.current());
         statement(p);
     }
     p.exit();

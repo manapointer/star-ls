@@ -1,11 +1,13 @@
 pub mod lexer;
 pub mod lines;
 pub mod parser;
+pub mod render;
 pub mod syntax_kind;
 
 pub(crate) use crate::syntax_kind::*;
 pub use crate::{
     parser::{parse_file, Parse},
+    render::*,
     syntax_kind::SyntaxKind,
 };
 
