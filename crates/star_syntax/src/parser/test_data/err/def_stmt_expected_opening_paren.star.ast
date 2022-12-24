@@ -1,0 +1,7 @@
+ FILE@0..0 "def hello"
+  DEF_STMT@0..0 "def hello"
+    DEF_KW@0..3 "def"
+    WHITESPACE@3..4 " "
+    IDENT@4..9 "hello"
+  NEWLINE@9..9 ""
+9:Expected opening '(' for parameter list

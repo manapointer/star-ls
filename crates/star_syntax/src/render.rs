@@ -1,6 +1,6 @@
-use crate::{SyntaxElement, SyntaxNode, WalkEvent};
+use crate::{Diagnostic, SyntaxElement, SyntaxNode, WalkEvent};
 
-pub fn render(syntax: SyntaxNode) -> String {
+pub fn render(syntax: SyntaxNode, diagnostics: Vec<Diagnostic>) -> String {
     let mut buf = String::new();
     let mut indent = 0;
     let mut start = 0;
@@ -30,6 +30,10 @@ pub fn render(syntax: SyntaxNode) -> String {
             }
             WalkEvent::Leave(_) => indent -= 2,
         }
+    }
+
+    for diagnostic in diagnostics {
+        buf.push_str(&format!("{}:{}\n", diagnostic.pos, diagnostic.message));
     }
 
     buf

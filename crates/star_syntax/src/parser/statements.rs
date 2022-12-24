@@ -101,12 +101,16 @@ pub(crate) fn def_stmt(p: &mut Parser) {
     p.enter(DEF_STMT);
     p.eat(T![def]);
 
+    // test_err def_stmt_missing_function_name
+    // def
     if !p.eat(T![ident]) {
         p.exit();
         p.error("Expected function name after def");
         return;
     }
 
+    // test_err def_stmt_expected_opening_paren
+    // def hello
     if !p.eat(T!['(']) {
         p.exit();
         p.error("Expected opening '(' for parameter list");

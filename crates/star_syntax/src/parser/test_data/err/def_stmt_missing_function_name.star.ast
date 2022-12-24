@@ -1,0 +1,5 @@
+ FILE@0..0 "def"
+  DEF_STMT@0..0 "def"
+    DEF_KW@0..3 "def"
+  NEWLINE@3..3 ""
+3:Expected function name after def
