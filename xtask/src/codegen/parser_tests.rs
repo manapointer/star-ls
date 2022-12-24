@@ -5,6 +5,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use anyhow::anyhow;
+
 #[derive(Default, Debug)]
 struct CommentBlock {
     lines: Vec<String>,
@@ -60,7 +62,10 @@ fn extract_comment_blocks(text: &str) -> Vec<CommentBlock> {
     blocks
 }
 
-fn add_tests_from_comment_blocks(tests: &mut HashMap<String, Test>, blocks: &[CommentBlock]) {
+fn add_tests_from_comment_blocks(
+    tests: &mut HashMap<String, Test>,
+    blocks: &[CommentBlock],
+) -> Result<(), anyhow::Error> {
     for block in blocks {
         if block.lines.is_empty() {
             continue;
@@ -93,12 +98,17 @@ fn add_tests_from_comment_blocks(tests: &mut HashMap<String, Test>, blocks: &[Co
             Some(res) => res,
             None => continue,
         };
-
+        if tests.contains_key(name) {
+            return Err(anyhow!("duplicate test name: {}", name));
+        }
+        eprintln!("name: {}", name);
         let text = lines.collect::<Vec<_>>().join("\n");
         if !text.is_empty() {
             tests.insert(name.to_string(), Test::new(kind, name.to_string(), text));
         }
     }
+
+    Ok(())
 }
 
 pub fn run(args: &mut Args) -> Result<(), anyhow::Error> {
@@ -115,7 +125,7 @@ pub fn run(args: &mut Args) -> Result<(), anyhow::Error> {
         let code = fs::read_to_string(&path)?;
         let blocks = extract_comment_blocks(&code);
 
-        add_tests_from_comment_blocks(&mut tests, &blocks);
+        add_tests_from_comment_blocks(&mut tests, &blocks)?;
     }
 
     let tests_dir = project_root().join(Path::new("crates/star_syntax/src/parser/test_data"));
