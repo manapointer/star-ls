@@ -1,5 +1,0 @@
- FILE@0..0 "break"
-  SIMPLE_STMT@0..0 "break"
-    BREAK_STMT@0..0 "break"
-      BREAK_KW@0..5 "break"
-    NEWLINE@5..5 ""
