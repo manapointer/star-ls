@@ -1,10 +1,11 @@
 use super::*;
 
-pub(crate) const PARAMETER_START: SyntaxKindSet = SyntaxKindSet::new(&[IDENT, STAR_STAR, STAR]);
+pub(crate) const PARAMETER_START: SyntaxKindSet =
+    EXPR_START.union(SyntaxKindSet::new(&[IDENT, STAR_STAR, STAR]));
 
 // `Parameters = Parameter {',' Parameter}.`
 // test parameters
-// def foo(x, y=1, *z, **w):
+// def foo(x, y=1+2, *z, **w):
 //     pass
 pub(crate) fn parameters(p: &mut Parser) {
     p.enter(PARAMETERS);
@@ -33,15 +34,15 @@ pub(crate) fn parameter(p: &mut Parser) {
 
     match p.current() {
         T![*] | T![**] => p.bump_any(),
-        T![ident] => (),
+        kind if EXPR_START.contains(kind) => (),
         _ => unreachable!(),
     }
 
-    if !p.expect(T![ident]) {
-        return;
-    }
-
-    if p.eat(T![=]) {
+    if p.at(T![ident]) && p.nth_at(1, T![=]) {
+        p.bump(T![ident]);
+        p.bump(T![=]);
+        test(p);
+    } else {
         test(p);
     }
 
