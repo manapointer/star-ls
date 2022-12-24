@@ -1,5 +1,5 @@
- FILE@0..0 "def hello"
-  DEF_STMT@0..0 "def hello"
+ FILE@0..9 "def hello"
+  DEF_STMT@0..9 "def hello"
     DEF_KW@0..3 "def"
     WHITESPACE@3..4 " "
     IDENT@4..9 "hello"
