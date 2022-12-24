@@ -41,6 +41,7 @@ crates_repository(
         "//:crates/star_ide/Cargo.toml",
         "//crates/star_ls:Cargo.toml",
         "//crates/star_syntax:Cargo.toml",
+        "//:xtask/Cargo.toml",
     ],
 )
 

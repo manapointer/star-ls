@@ -6,5 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-salsa = { git = "https://github.com/manapointer/salsa", package = "salsa-2022", rev = "4d7ca00e8cc150941f5ff9244925f61441fb5c0b" }
+salsa = { git = "https://github.com/manapointer/salsa", package = "salsa-2022", rev = "2fc0a3c08f666c17f73d4d689535e3030391b607" }
 star_syntax = { path = "../star_syntax" }
