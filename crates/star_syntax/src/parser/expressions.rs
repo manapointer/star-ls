@@ -12,20 +12,37 @@ pub(crate) const EXPR_START: SyntaxKindSet = ATOM_EXPR_START.union(SyntaxKindSet
     T![lambda],
 ]));
 
-// Expression recovery
-// If no expression, recover until newline or closing rparen if depth > 0.
-
-pub(crate) fn parse_assign_or_expression(p: &mut Parser) {
-    let checkpoint = p.checkpoint();
-}
-
-// test comma_expr
+// test tuple_exr
 // 1, 2
-pub(crate) fn expression(p: &mut Parser) {
+// ()
+// (x)
+// (x, y + 1)
+// (x, y + 1, z + 2)
+pub(crate) fn expression_or_tuple(p: &mut Parser, parens: bool) {
+    let checkpoint = p.checkpoint();
+    let mut did_checkpoint = false;
+    if parens {
+        p.bump(T!['(']);
+        if p.eat(T![')']) {
+            p.enter_at(checkpoint, TUPLE_EXPR);
+            p.exit();
+            return;
+        }
+    }
     test(p);
     while p.at(T![,]) && EXPR_START.contains(p.nth(1)) {
+        if !did_checkpoint {
+            did_checkpoint = true;
+            p.enter_at(checkpoint, TUPLE_EXPR);
+        }
         p.bump(T![,]);
         test(p);
+    }
+    if parens && !p.expect(T![')']) {
+        // TODO: Recover to closing paren
+    }
+    if did_checkpoint {
+        p.exit();
     }
 }
 
@@ -36,17 +53,6 @@ pub(crate) fn test(p: &mut Parser) {
         _ => or_expr(p),
     }
 }
-
-// pub(crate) fn comma_expr(p: &mut Parser) {
-//     let checkpoint = p.checkpoint();
-//     or_expr(p);
-//     while p.at(OR) {
-//         p.enter_at(checkpoint, BINARY_EXPR);
-//         p.bump_any();
-//         or_expr(p);
-//         p.exit()
-//     }
-// }
 
 // test or_expr
 // 1 or 2
@@ -249,31 +255,7 @@ pub(crate) fn primary_expr(p: &mut Parser) {
 pub(crate) fn atom_expr(p: &mut Parser) {
     match p.current() {
         T![ident] | INT | FLOAT | STRING => p.bump_any(),
-        T!['('] => {
-            p.bump(T!['(']);
-            if EXPR_START.contains(p.current()) {
-                expression(p);
-            }
-            p.eat(T![,]);
-        }
+        T!['('] => expression_or_tuple(p, true),
         _ => p.error("expected expression"),
-    }
-}
-
-pub(crate) fn tuple_expr(p: &mut Parser) {
-    p.bump(T!['(']);
-    let checkpoint = p.checkpoint();
-    let mut did_checkpoint = false;
-    or_expr(p);
-    while p.at(T![,]) && EXPR_START.contains(p.nth(1)) {
-        if !did_checkpoint {
-            did_checkpoint = true;
-            p.enter_at(checkpoint, TUPLE_EXPR);
-        }
-        p.bump(T![,]);
-        or_expr(p);
-    }
-    if did_checkpoint {
-        p.exit();
     }
 }
