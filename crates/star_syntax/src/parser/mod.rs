@@ -149,6 +149,11 @@ impl<'a> Parser<'a> {
     }
 
     fn enter_at(&mut self, checkpoint: Checkpoint, kind: SyntaxKind) {
+        match mem::replace(&mut self.state, State::Normal) {
+            State::Uninitialized => unreachable!(),
+            State::Normal => (),
+            State::PendingExit => self.builder.finish_node(),
+        }
         self.builder.start_node_at(checkpoint, kind.into())
     }
 

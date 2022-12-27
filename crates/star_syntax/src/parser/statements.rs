@@ -47,11 +47,27 @@ pub(crate) fn small_stmt(p: &mut Parser) {
         T![break] => break_stmt(p),
         T![continue] => continue_stmt(p),
         T![pass] => pass_stmt(p),
-        kind if EXPR_START.contains(kind) => expression_or_tuple(p, false),
+        kind if EXPR_START.contains(kind) => expr_or_assign_stmt(p),
         _ => {
             p.error(&format!("unexpected token: {:?}", p.current()));
             p.bump_any();
         }
+    }
+}
+
+// test assign_stmt
+// x = 1
+// x, y = 1, 2
+// x, y = (1, 2)
+// (x, y) = 1, 2
+pub(crate) fn expr_or_assign_stmt(p: &mut Parser) {
+    let checkpoint = p.checkpoint();
+    expression_or_tuple(p, /* parens */ false);
+    if matches!(p.current(), T![=]) {
+        p.enter_at(checkpoint, ASSIGN_STMT);
+        p.bump_any();
+        expression_or_tuple(p, false);
+        p.exit();
     }
 }
 

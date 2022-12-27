@@ -12,7 +12,7 @@ pub(crate) const EXPR_START: SyntaxKindSet = ATOM_EXPR_START.union(SyntaxKindSet
     T![lambda],
 ]));
 
-// test tuple_exr
+// tuple_expr
 // 1, 2
 // ()
 // (x)

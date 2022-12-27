@@ -1,0 +1,61 @@
+ FILE@0..45
+  SIMPLE_STMT@0..6
+    ASSIGN_STMT@0..5
+      IDENT@0..1 "x"
+      WHITESPACE@1..2 " "
+      EQ@2..3 "="
+      WHITESPACE@3..4 " "
+      INT@4..5 "1"
+    NEWLINE@5..6 "\n"
+  SIMPLE_STMT@6..18
+    ASSIGN_STMT@6..17
+      TUPLE_EXPR@6..10
+        IDENT@6..7 "x"
+        COMMA@7..8 ","
+        WHITESPACE@8..9 " "
+        IDENT@9..10 "y"
+      WHITESPACE@10..11 " "
+      EQ@11..12 "="
+      WHITESPACE@12..13 " "
+      TUPLE_EXPR@13..17
+        INT@13..14 "1"
+        COMMA@14..15 ","
+        WHITESPACE@15..16 " "
+        INT@16..17 "2"
+    NEWLINE@17..18 "\n"
+  SIMPLE_STMT@18..32
+    ASSIGN_STMT@18..31
+      TUPLE_EXPR@18..22
+        IDENT@18..19 "x"
+        COMMA@19..20 ","
+        WHITESPACE@20..21 " "
+        IDENT@21..22 "y"
+      WHITESPACE@22..23 " "
+      EQ@23..24 "="
+      WHITESPACE@24..25 " "
+      TUPLE_EXPR@25..31
+        L_PAREN@25..26 "("
+        INT@26..27 "1"
+        COMMA@27..28 ","
+        WHITESPACE@28..29 " "
+        INT@29..30 "2"
+        R_PAREN@30..31 ")"
+    NEWLINE@31..32 "\n"
+  SIMPLE_STMT@32..45
+    ASSIGN_STMT@32..45
+      TUPLE_EXPR@32..38
+        L_PAREN@32..33 "("
+        IDENT@33..34 "x"
+        COMMA@34..35 ","
+        WHITESPACE@35..36 " "
+        IDENT@36..37 "y"
+        R_PAREN@37..38 ")"
+      WHITESPACE@38..39 " "
+      EQ@39..40 "="
+      WHITESPACE@40..41 " "
+      TUPLE_EXPR@41..45
+        INT@41..42 "1"
+        COMMA@42..43 ","
+        WHITESPACE@43..44 " "
+        INT@44..45 "2"
+    NEWLINE@45..45 ""
