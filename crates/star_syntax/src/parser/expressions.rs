@@ -46,11 +46,30 @@ pub(crate) fn expression_or_tuple(p: &mut Parser, parens: bool) {
     }
 }
 
+// test test_expr
+// 1
+// 1 if 2 else 3
+// 1 if 2 else 3 if 4 else 5
 pub(crate) fn test(p: &mut Parser) {
     match p.current() {
-        T![if] => todo!(),
         T![lambda] => todo!(),
-        _ => or_expr(p),
+        _ => {
+            let checkpoint = p.checkpoint();
+            or_expr(p);
+            if !p.eat(T![if]) {
+                // TODO: Recover
+                return;
+            }
+            p.enter_at(checkpoint, IF_EXPR);
+            or_expr(p);
+            if !p.expect(T![else]) {
+                p.exit();
+                // TODO: Recover
+                return;
+            }
+            test(p);
+            p.exit();
+        }
     }
 }
 
