@@ -240,15 +240,40 @@ pub(crate) fn primary_expr(p: &mut Parser) {
     }
 }
 
-/// Operand = identifier
-///         | int | float | string | bytes
-///         | ListExpr | ListComp
-///         | DictExpr | DictComp
-///         | '(' [Expression [',']] ')'
-///         .
+// Operand = identifier
+//         | int | float | string | bytes
+//         | ListExpr | ListComp
+//         | DictExpr | DictComp
+//         | '(' [Expression [',']] ')'
+//        .
 pub(crate) fn atom_expr(p: &mut Parser) {
     match p.current() {
         T![ident] | INT | FLOAT | STRING => p.bump_any(),
+        T!['('] => {
+            p.bump(T!['(']);
+            if EXPR_START.contains(p.current()) {
+                expression(p);
+            }
+            p.eat(T![,]);
+        }
         _ => p.error("expected expression"),
+    }
+}
+
+pub(crate) fn tuple_expr(p: &mut Parser) {
+    p.bump(T!['(']);
+    let checkpoint = p.checkpoint();
+    let mut did_checkpoint = false;
+    or_expr(p);
+    while p.at(T![,]) && EXPR_START.contains(p.nth(1)) {
+        if !did_checkpoint {
+            did_checkpoint = true;
+            p.enter_at(checkpoint, TUPLE_EXPR);
+        }
+        p.bump(T![,]);
+        or_expr(p);
+    }
+    if did_checkpoint {
+        p.exit();
     }
 }

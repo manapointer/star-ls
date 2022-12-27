@@ -102,6 +102,7 @@ pub enum SyntaxKind {
     PRIMARY_EXPR,
     UNARY_EXPR,
     BINARY_EXPR,
+    TUPLE_EXPR,
     LAMBDA_EXPR,
     DOT_EXPR,
     CALL_EXPR,
