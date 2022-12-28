@@ -22,6 +22,8 @@ use params::*;
 use statements::*;
 use suite::*;
 
+pub(crate) const RECOVERY_SET: SyntaxKindSet = SyntaxKindSet::new(&[T!['\n']]);
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Parse {
     errors: Vec<Diagnostic>,
@@ -110,6 +112,12 @@ impl<'a> Parser<'a> {
         }
         self.do_bump(kind);
         true
+    }
+
+    fn eat_until(&mut self, target: SyntaxKindSet) {
+        while self.current() != EOF && !target.contains(self.current()) {
+            self.bump_any();
+        }
     }
 
     fn bump(&mut self, kind: SyntaxKind) {

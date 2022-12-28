@@ -27,9 +27,9 @@ pub(crate) fn argument(p: &mut Parser) {
     if p.at(T![ident]) && p.nth_at(1, T![=]) {
         p.bump(T![ident]);
         p.bump(T![=]);
-        test(p);
+        test(p, true);
     } else {
-        test(p);
+        test(p, true);
     }
 
     p.exit();

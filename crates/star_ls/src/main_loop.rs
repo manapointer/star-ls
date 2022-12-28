@@ -1,11 +1,8 @@
-use std::time::Duration;
-
 use crate::{global_state::GlobalState, Result};
 use crossbeam_channel::select;
 use lsp_server::{Connection, Message, Notification, Request};
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range, Url};
 use star_db::{lines, parse};
-use star_syntax::{SyntaxElement, SyntaxNode, WalkEvent};
 
 #[derive(Debug)]
 pub enum Task {
@@ -105,6 +102,8 @@ impl GlobalState {
                 self.db.set_file_text(url.to_string(), text);
             }
         }
+
+        eprintln!("changes");
 
         let subscriptions_changed = self.subscriptions.take_changed();
 

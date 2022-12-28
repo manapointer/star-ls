@@ -62,11 +62,25 @@ pub(crate) fn small_stmt(p: &mut Parser) {
 // (x, y) = 1, 2
 pub(crate) fn expr_or_assign_stmt(p: &mut Parser) {
     let checkpoint = p.checkpoint();
-    expression_or_tuple(p, /* parens */ false);
-    if matches!(p.current(), T![=]) {
+    expression_or_tuple(p, /* parens */ false, /* force_expr_list */ false);
+    if matches!(
+        p.current(),
+        T![=]
+            | T![+=]
+            | T![-=]
+            | T![*=]
+            | T![/=]
+            | T!["//="]
+            | T![%=]
+            | T![&=]
+            | T![|=]
+            | T![^=]
+            | T![<<=]
+            | T![>>=]
+    ) {
         p.enter_at(checkpoint, ASSIGN_STMT);
         p.bump_any();
-        expression_or_tuple(p, false);
+        expression_or_tuple(p, /*parens */ false, /* force_expr_list */ false);
         p.exit();
     }
 }
@@ -80,7 +94,7 @@ pub(crate) fn return_stmt(p: &mut Parser) {
     p.enter(RETURN_STMT);
     p.bump(T![return]);
     if EXPR_START.contains(p.current()) {
-        expression_or_tuple(p, false);
+        expression_or_tuple(p, /* parens */ false, /* force_expr_list */ false);
     }
     p.exit();
 }

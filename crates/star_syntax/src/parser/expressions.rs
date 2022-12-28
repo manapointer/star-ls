@@ -18,7 +18,7 @@ pub(crate) const EXPR_START: SyntaxKindSet = ATOM_EXPR_START.union(SyntaxKindSet
 // (x)
 // (x, y + 1)
 // (x, y + 1, z + 2)
-pub(crate) fn expression_or_tuple(p: &mut Parser, parens: bool) {
+pub(crate) fn expression_or_tuple(p: &mut Parser, parens: bool, force_expr_list: bool) -> usize {
     let checkpoint = p.checkpoint();
     let mut did_checkpoint = false;
     if parens {
@@ -26,36 +26,42 @@ pub(crate) fn expression_or_tuple(p: &mut Parser, parens: bool) {
         if p.eat(T![')']) {
             p.enter_at(checkpoint, TUPLE_EXPR);
             p.exit();
-            return;
+            return 0;
         }
     }
-    test(p);
+    let mut len = 1;
+    test(p, true);
     while p.at(T![,]) && EXPR_START.contains(p.nth(1)) {
-        if !did_checkpoint {
+        if !did_checkpoint && !force_expr_list {
             did_checkpoint = true;
             p.enter_at(checkpoint, TUPLE_EXPR);
         }
         p.bump(T![,]);
-        test(p);
+        test(p, true);
+        len += 1;
     }
     if parens && !p.expect(T![')']) {
-        // TODO: Recover to closing paren
+        // TODO: Recover to newline.
     }
     if did_checkpoint {
         p.exit();
     }
+    len
 }
 
 // test test_expr
 // 1
 // 1 if 2 else 3
 // 1 if 2 else 3 if 4 else 5
-pub(crate) fn test(p: &mut Parser) {
+pub(crate) fn test(p: &mut Parser, allow_if: bool) {
     match p.current() {
         T![lambda] => todo!(),
         _ => {
             let checkpoint = p.checkpoint();
             or_expr(p);
+            if !allow_if {
+                return;
+            }
             if !p.eat(T![if]) {
                 // TODO: Recover
                 return;
@@ -67,7 +73,7 @@ pub(crate) fn test(p: &mut Parser) {
                 // TODO: Recover
                 return;
             }
-            test(p);
+            test(p, true);
             p.exit();
         }
     }
@@ -219,7 +225,7 @@ pub(crate) fn primary_expr(p: &mut Parser) {
                 match p.current() {
                     T![:] => (),
                     kind if EXPR_START.contains(kind) => {
-                        test(p);
+                        test(p, true);
                         match p.current() {
                             T![']'] => {
                                 p.eat(T![']']);
@@ -247,11 +253,11 @@ pub(crate) fn primary_expr(p: &mut Parser) {
                 p.bump(T![:]);
 
                 if EXPR_START.contains(p.current()) {
-                    test(p);
+                    test(p, true);
                 }
 
                 if p.eat(T![:]) && EXPR_START.contains(p.current()) {
-                    test(p);
+                    test(p, true);
                 }
 
                 if !p.expect(T![:]) {
@@ -274,7 +280,86 @@ pub(crate) fn primary_expr(p: &mut Parser) {
 pub(crate) fn atom_expr(p: &mut Parser) {
     match p.current() {
         T![ident] | INT | FLOAT | STRING => p.bump_any(),
-        T!['('] => expression_or_tuple(p, true),
+        T!['('] => {
+            expression_or_tuple(p, /* parens */ true, /* force_expr_list */ false);
+        }
+        T!['['] => list_expr_or_comp(p),
         _ => p.error("expected expression"),
     }
+}
+
+pub(crate) fn list_expr_or_comp(p: &mut Parser) {
+    let checkpoint = p.checkpoint();
+    p.bump(T!['[']);
+    match p.current() {
+        T![']'] => {
+            p.enter_at(checkpoint, LIST_EXPR);
+            p.bump(T![']']);
+            p.exit();
+        }
+        _ => {
+            let len =
+                expression_or_tuple(p, /* parens */ false, /* force_expr_list */ true);
+            // If only one 'test' was parsed, and the next token is 'for', then we have a list comprehension.
+            if len == 1 && p.at(T![for]) {
+                // test list_comp
+                // [x for x in y]
+                // [x for x in y if x]
+                // [(x, y) for x in a for y in b if x == y]
+                p.enter_at(checkpoint, LIST_COMP);
+                loop {
+                    match p.current() {
+                        T![for] => {
+                            p.enter(LIST_COMP_FOR);
+                            p.bump(T![for]);
+                            loop_variables(p);
+                            if !p.expect(T![in]) {
+                                p.exit();
+                                break;
+                            }
+
+                            test(p, false);
+                            p.exit();
+                        }
+                        T![if] => {
+                            p.enter(LIST_COMP_IF);
+                            p.bump(T![if]);
+                            test(p, false);
+                            p.exit();
+                        }
+                        _ => break,
+                    }
+                }
+            } else {
+                // test list_expr
+                // []
+                // [1]
+                // [1, 2]
+                // [1, 2, 3]
+                // [1, 2, 3,]
+                p.enter_at(checkpoint, LIST_EXPR);
+                p.eat(T![,]);
+            }
+            let is_closed = p.expect(T![']']);
+            p.exit();
+            if !is_closed {
+                p.enter(ERROR);
+                p.eat_until(RECOVERY_SET);
+                p.exit();
+            }
+        }
+    }
+}
+
+pub(crate) fn loop_variables(p: &mut Parser) {
+    p.enter(LOOP_VARIABLES);
+    primary_expr(p);
+    while p.at(T![,]) {
+        p.bump(T![,]);
+        if !ATOM_EXPR_START.contains(p.current()) {
+            break;
+        }
+        primary_expr(p);
+    }
+    p.exit();
 }
