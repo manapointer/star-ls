@@ -1,5 +1,5 @@
- FILE@0..0 "continue"
-  SIMPLE_STMT@0..0 "continue"
-    CONTINUE_STMT@0..0 "continue"
+ FILE@0..8
+  SIMPLE_STMT@0..8
+    CONTINUE_STMT@0..8
       CONTINUE_KW@0..8 "continue"
     NEWLINE@8..8 ""

@@ -13,7 +13,7 @@ path = "src/bin/main.rs"
 crossbeam-channel = "0.5.5"
 lsp-server = "0.6.0"
 lsp-types = "=0.93.2"
-salsa = { git = "https://github.com/manapointer/salsa", package = "salsa-2022", rev = "2fc0a3c08f666c17f73d4d689535e3030391b607" }
+salsa = { git = "https://github.com/manapointer/salsa", package = "salsa-2022", rev = "f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7" }
 serde_json = "1.0.86"
 serde = { version = "1.0.144", features = ["derive"] }
 star_db = { path = "../star_db" }

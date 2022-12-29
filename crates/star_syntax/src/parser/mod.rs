@@ -16,10 +16,13 @@ mod suite;
 #[cfg(test)]
 mod tests;
 
+use arguments::*;
 use expressions::*;
 use params::*;
 use statements::*;
 use suite::*;
+
+pub(crate) const RECOVERY_SET: SyntaxKindSet = SyntaxKindSet::new(&[T!['\n']]);
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Parse {
@@ -111,6 +114,12 @@ impl<'a> Parser<'a> {
         true
     }
 
+    fn eat_until(&mut self, target: SyntaxKindSet) {
+        while self.current() != EOF && !target.contains(self.current()) {
+            self.bump_any();
+        }
+    }
+
     fn bump(&mut self, kind: SyntaxKind) {
         assert!(self.eat(kind));
     }
@@ -148,6 +157,11 @@ impl<'a> Parser<'a> {
     }
 
     fn enter_at(&mut self, checkpoint: Checkpoint, kind: SyntaxKind) {
+        match mem::replace(&mut self.state, State::Normal) {
+            State::Uninitialized => unreachable!(),
+            State::Normal => (),
+            State::PendingExit => self.builder.finish_node(),
+        }
         self.builder.start_node_at(checkpoint, kind.into())
     }
 
@@ -225,8 +239,6 @@ pub fn parse_file(input: &str) -> Parse {
             (token.kind, token.len)
         })
         .collect::<Vec<_>>();
-
-    eprintln!("{:?}", tokens);
 
     let mut p = Parser::new(tokens, input);
     file(&mut p);

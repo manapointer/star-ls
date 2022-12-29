@@ -101,7 +101,6 @@ fn add_tests_from_comment_blocks(
         if tests.contains_key(name) {
             return Err(anyhow!("duplicate test name: {}", name));
         }
-        eprintln!("name: {}", name);
         let text = lines.collect::<Vec<_>>().join("\n");
         if !text.is_empty() {
             tests.insert(name.to_string(), Test::new(kind, name.to_string(), text));

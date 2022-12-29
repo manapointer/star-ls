@@ -1,5 +1,5 @@
- FILE@0..0 "pass"
-  SIMPLE_STMT@0..0 "pass"
-    PASS_STMT@0..0 "pass"
+ FILE@0..4
+  SIMPLE_STMT@0..4
+    PASS_STMT@0..4
       PASS_KW@0..4 "pass"
     NEWLINE@4..4 ""

@@ -1,0 +1,46 @@
+ FILE@0..41
+  SIMPLE_STMT@0..2
+    LITERAL@0..1
+      INT@0..1 "1"
+    NEWLINE@1..2 "\n"
+  SIMPLE_STMT@2..16
+    IF_EXPR@2..15
+      LITERAL@2..3
+        INT@2..3 "1"
+      WHITESPACE@3..4 " "
+      IF_KW@4..6 "if"
+      WHITESPACE@6..7 " "
+      LITERAL@7..8
+        INT@7..8 "2"
+      WHITESPACE@8..9 " "
+      ELSE_KW@9..13 "else"
+      WHITESPACE@13..14 " "
+      LITERAL@14..15
+        INT@14..15 "3"
+    NEWLINE@15..16 "\n"
+  SIMPLE_STMT@16..41
+    IF_EXPR@16..41
+      LITERAL@16..17
+        INT@16..17 "1"
+      WHITESPACE@17..18 " "
+      IF_KW@18..20 "if"
+      WHITESPACE@20..21 " "
+      LITERAL@21..22
+        INT@21..22 "2"
+      WHITESPACE@22..23 " "
+      ELSE_KW@23..27 "else"
+      WHITESPACE@27..28 " "
+      IF_EXPR@28..41
+        LITERAL@28..29
+          INT@28..29 "3"
+        WHITESPACE@29..30 " "
+        IF_KW@30..32 "if"
+        WHITESPACE@32..33 " "
+        LITERAL@33..34
+          INT@33..34 "4"
+        WHITESPACE@34..35 " "
+        ELSE_KW@35..39 "else"
+        WHITESPACE@39..40 " "
+        LITERAL@40..41
+          INT@40..41 "5"
+    NEWLINE@41..41 ""

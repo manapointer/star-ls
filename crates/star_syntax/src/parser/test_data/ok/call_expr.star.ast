@@ -1,0 +1,48 @@
+ FILE@0..35
+  SIMPLE_STMT@0..6
+    CALL_EXPR@0..5
+      IDENT@0..3 "foo"
+      L_PAREN@3..4 "("
+      R_PAREN@4..5 ")"
+    NEWLINE@5..6 "\n"
+  SIMPLE_STMT@6..13
+    CALL_EXPR@6..12
+      IDENT@6..9 "foo"
+      L_PAREN@9..10 "("
+      ARGUMENTS@10..11
+        ARGUMENT@10..11
+          LITERAL@10..11
+            INT@10..11 "1"
+      R_PAREN@11..12 ")"
+    NEWLINE@12..13 "\n"
+  SIMPLE_STMT@13..35
+    CALL_EXPR@13..35
+      IDENT@13..16 "foo"
+      L_PAREN@16..17 "("
+      ARGUMENTS@17..34
+        ARGUMENT@17..18
+          LITERAL@17..18
+            INT@17..18 "1"
+        COMMA@18..19 ","
+        WHITESPACE@19..20 " "
+        ARGUMENT@20..25
+          IDENT@20..21 "a"
+          EQ@21..22 "="
+          BINARY_EXPR@22..25
+            LITERAL@22..23
+              INT@22..23 "1"
+            PLUS@23..24 "+"
+            LITERAL@24..25
+              INT@24..25 "2"
+        COMMA@25..26 ","
+        WHITESPACE@26..27 " "
+        ARGUMENT@27..29
+          STAR@27..28 "*"
+          IDENT@28..29 "b"
+        COMMA@29..30 ","
+        WHITESPACE@30..31 " "
+        ARGUMENT@31..34
+          STAR_STAR@31..33 "**"
+          IDENT@33..34 "c"
+      R_PAREN@34..35 ")"
+    NEWLINE@35..35 ""

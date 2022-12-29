@@ -1,5 +1,5 @@
 {
-  "checksum": "cc0936dd42de105adaaf5a9e6b63e5d8a68de3c883d208e3eba372f20e1403b1",
+  "checksum": "a66a2cd0f503ba86ebee02adceaead68e4c260b04c481e9d123d9343736e6c87",
   "crates": {
     "ahash 0.7.6": {
       "name": "ahash",
@@ -1679,7 +1679,7 @@
               "target": "log"
             },
             {
-              "id": "serde 1.0.151",
+              "id": "serde 1.0.152",
               "target": "serde"
             },
             {
@@ -1732,7 +1732,7 @@
               "target": "bitflags"
             },
             {
-              "id": "serde 1.0.151",
+              "id": "serde 1.0.152",
               "target": "serde"
             },
             {
@@ -2596,7 +2596,7 @@
         "Git": {
           "remote": "https://github.com/manapointer/salsa",
           "commitish": {
-            "Rev": "2fc0a3c08f666c17f73d4d689535e3030391b607"
+            "Rev": "f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7"
           },
           "shallow_since": "1669697685 +0000",
           "strip_prefix": "components/salsa-2022"
@@ -2687,7 +2687,7 @@
         "Git": {
           "remote": "https://github.com/manapointer/salsa",
           "commitish": {
-            "Rev": "2fc0a3c08f666c17f73d4d689535e3030391b607"
+            "Rev": "f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7"
           },
           "shallow_since": "1669697685 +0000",
           "strip_prefix": "components/salsa-2022-macros"
@@ -2775,13 +2775,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "serde 1.0.151": {
+    "serde 1.0.152": {
       "name": "serde",
-      "version": "1.0.151",
+      "version": "1.0.152",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/serde/1.0.151/download",
-          "sha256": "97fed41fc1a24994d044e6db6935e69511a1153b52c15eb42493b26fa87feba0"
+          "url": "https://crates.io/api/v1/crates/serde/1.0.152/download",
+          "sha256": "bb7d1f0d3021d347a83e556fc4683dea2ea09d87bccdf88ff5c12545d89d5efb"
         }
       },
       "targets": [
@@ -2824,7 +2824,7 @@
         "deps": {
           "common": [
             {
-              "id": "serde 1.0.151",
+              "id": "serde 1.0.152",
               "target": "build_script_build"
             }
           ],
@@ -2834,13 +2834,13 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "serde_derive 1.0.151",
+              "id": "serde_derive 1.0.152",
               "target": "serde_derive"
             }
           ],
           "selects": {}
         },
-        "version": "1.0.151"
+        "version": "1.0.152"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -2849,13 +2849,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "serde_derive 1.0.151": {
+    "serde_derive 1.0.152": {
       "name": "serde_derive",
-      "version": "1.0.151",
+      "version": "1.0.152",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/serde_derive/1.0.151/download",
-          "sha256": "255abe9a125a985c05190d687b320c12f9b1f0b99445e608c21ba0782c719ad8"
+          "url": "https://crates.io/api/v1/crates/serde_derive/1.0.152/download",
+          "sha256": "af487d118eecd09402d70a5d72551860e788df87b464af30e5ea6a38c75c541e"
         }
       },
       "targets": [
@@ -2903,7 +2903,7 @@
               "target": "quote"
             },
             {
-              "id": "serde_derive 1.0.151",
+              "id": "serde_derive 1.0.152",
               "target": "build_script_build"
             },
             {
@@ -2914,7 +2914,7 @@
           "selects": {}
         },
         "edition": "2015",
-        "version": "1.0.151"
+        "version": "1.0.152"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -2978,7 +2978,7 @@
               "target": "ryu"
             },
             {
-              "id": "serde 1.0.151",
+              "id": "serde 1.0.152",
               "target": "serde"
             },
             {
@@ -3206,7 +3206,7 @@
               "alias": "salsa"
             },
             {
-              "id": "serde 1.0.151",
+              "id": "serde 1.0.152",
               "target": "serde"
             },
             {
@@ -3627,7 +3627,7 @@
               "target": "percent_encoding"
             },
             {
-              "id": "serde 1.0.151",
+              "id": "serde 1.0.152",
               "target": "serde"
             }
           ],

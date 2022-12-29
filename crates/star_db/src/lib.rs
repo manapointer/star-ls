@@ -77,7 +77,5 @@ pub fn parse(db: &dyn Db, file: File) -> Parse {
 
 #[salsa::tracked]
 pub fn lines(db: &dyn Db, file: File) -> Lines {
-    std::thread::sleep(std::time::Duration::from_secs(2));
-
     Lines::new(file.text(db))
 }

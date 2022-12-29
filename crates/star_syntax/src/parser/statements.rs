@@ -47,22 +47,54 @@ pub(crate) fn small_stmt(p: &mut Parser) {
         T![break] => break_stmt(p),
         T![continue] => continue_stmt(p),
         T![pass] => pass_stmt(p),
-        kind if EXPR_START.contains(kind) => expression(p),
-        kind => {
-            eprintln!("wtf: {:?}", kind);
+        kind if EXPR_START.contains(kind) => expr_or_assign_stmt(p),
+        _ => {
+            p.error(&format!("unexpected token: {:?}", p.current()));
             p.bump_any();
         }
+    }
+}
+
+// test assign_stmt
+// x = 1
+// x, y = 1, 2
+// x, y = (1, 2)
+// (x, y) = 1, 2
+pub(crate) fn expr_or_assign_stmt(p: &mut Parser) {
+    let checkpoint = p.checkpoint();
+    expression_or_tuple(p, /* parens */ false, /* force_expr_list */ false);
+    if matches!(
+        p.current(),
+        T![=]
+            | T![+=]
+            | T![-=]
+            | T![*=]
+            | T![/=]
+            | T!["//="]
+            | T![%=]
+            | T![&=]
+            | T![|=]
+            | T![^=]
+            | T![<<=]
+            | T![>>=]
+    ) {
+        p.enter_at(checkpoint, ASSIGN_STMT);
+        p.bump_any();
+        expression_or_tuple(p, /*parens */ false, /* force_expr_list */ false);
+        p.exit();
     }
 }
 
 // test return_stmt
 // return
 // return 1
+// return 1, 2
+// return (1, 2)
 pub(crate) fn return_stmt(p: &mut Parser) {
     p.enter(RETURN_STMT);
     p.bump(T![return]);
     if EXPR_START.contains(p.current()) {
-        expression(p);
+        expression_or_tuple(p, /* parens */ false, /* force_expr_list */ false);
     }
     p.exit();
 }

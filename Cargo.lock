@@ -436,7 +436,7 @@ checksum = "7b4b9743ed687d4b4bcedf9ff5eaa7398495ae14e61cba0a295704edbc7decde"
 [[package]]
 name = "salsa-2022"
 version = "0.1.0"
-source = "git+https://github.com/manapointer/salsa?rev=2fc0a3c08f666c17f73d4d689535e3030391b607#2fc0a3c08f666c17f73d4d689535e3030391b607"
+source = "git+https://github.com/manapointer/salsa?rev=f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7#f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7"
 dependencies = [
  "arc-swap",
  "crossbeam",
@@ -454,7 +454,7 @@ dependencies = [
 [[package]]
 name = "salsa-2022-macros"
 version = "0.1.0"
-source = "git+https://github.com/manapointer/salsa?rev=2fc0a3c08f666c17f73d4d689535e3030391b607#2fc0a3c08f666c17f73d4d689535e3030391b607"
+source = "git+https://github.com/manapointer/salsa?rev=f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7#f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7"
 dependencies = [
  "eyre",
  "heck",
@@ -471,18 +471,18 @@ checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "serde"
-version = "1.0.151"
+version = "1.0.152"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97fed41fc1a24994d044e6db6935e69511a1153b52c15eb42493b26fa87feba0"
+checksum = "bb7d1f0d3021d347a83e556fc4683dea2ea09d87bccdf88ff5c12545d89d5efb"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.151"
+version = "1.0.152"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "255abe9a125a985c05190d687b320c12f9b1f0b99445e608c21ba0782c719ad8"
+checksum = "af487d118eecd09402d70a5d72551860e788df87b464af30e5ea6a38c75c541e"
 dependencies = [
  "proc-macro2",
  "quote",
