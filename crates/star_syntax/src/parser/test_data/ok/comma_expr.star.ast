@@ -1,8 +1,10 @@
  FILE@0..4
   SIMPLE_STMT@0..4
     TUPLE_EXPR@0..4
-      INT@0..1 "1"
+      LITERAL@0..1
+        INT@0..1 "1"
       COMMA@1..2 ","
       WHITESPACE@2..3 " "
-      INT@3..4 "2"
+      LITERAL@3..4
+        INT@3..4 "2"
     NEWLINE@4..4 ""

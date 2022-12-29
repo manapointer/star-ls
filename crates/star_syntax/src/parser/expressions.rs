@@ -279,13 +279,20 @@ pub(crate) fn primary_expr(p: &mut Parser) {
 //        .
 pub(crate) fn atom_expr(p: &mut Parser) {
     match p.current() {
-        T![ident] | INT | FLOAT | STRING => p.bump_any(),
+        T![ident] => p.bump_any(),
+        INT | FLOAT | STRING => literal(p),
         T!['('] => {
             expression_or_tuple(p, /* parens */ true, /* force_expr_list */ false);
         }
         T!['['] => list_expr_or_comp(p),
         _ => p.error("expected expression"),
     }
+}
+
+pub(crate) fn literal(p: &mut Parser) {
+    p.enter(LITERAL);
+    p.bump_any();
+    p.exit();
 }
 
 pub(crate) fn list_expr_or_comp(p: &mut Parser) {

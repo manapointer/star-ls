@@ -5,7 +5,8 @@
       WHITESPACE@1..2 " "
       EQ@2..3 "="
       WHITESPACE@3..4 " "
-      INT@4..5 "1"
+      LITERAL@4..5
+        INT@4..5 "1"
     NEWLINE@5..6 "\n"
   SIMPLE_STMT@6..18
     ASSIGN_STMT@6..17
@@ -18,10 +19,12 @@
       EQ@11..12 "="
       WHITESPACE@12..13 " "
       TUPLE_EXPR@13..17
-        INT@13..14 "1"
+        LITERAL@13..14
+          INT@13..14 "1"
         COMMA@14..15 ","
         WHITESPACE@15..16 " "
-        INT@16..17 "2"
+        LITERAL@16..17
+          INT@16..17 "2"
     NEWLINE@17..18 "\n"
   SIMPLE_STMT@18..32
     ASSIGN_STMT@18..31
@@ -35,10 +38,12 @@
       WHITESPACE@24..25 " "
       TUPLE_EXPR@25..31
         L_PAREN@25..26 "("
-        INT@26..27 "1"
+        LITERAL@26..27
+          INT@26..27 "1"
         COMMA@27..28 ","
         WHITESPACE@28..29 " "
-        INT@29..30 "2"
+        LITERAL@29..30
+          INT@29..30 "2"
         R_PAREN@30..31 ")"
     NEWLINE@31..32 "\n"
   SIMPLE_STMT@32..45
@@ -54,8 +59,10 @@
       EQ@39..40 "="
       WHITESPACE@40..41 " "
       TUPLE_EXPR@41..45
-        INT@41..42 "1"
+        LITERAL@41..42
+          INT@41..42 "1"
         COMMA@42..43 ","
         WHITESPACE@43..44 " "
-        INT@44..45 "2"
+        LITERAL@44..45
+          INT@44..45 "2"
     NEWLINE@45..45 ""

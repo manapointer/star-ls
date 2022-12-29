@@ -122,6 +122,7 @@ pub enum SyntaxKind {
     COMP_CLAUSE,
     SUITE,
     LOOP_VARIABLES,
+    LITERAL,
     FILE,
 }
 

@@ -13,9 +13,11 @@
         IDENT@11..12 "y"
         EQ@12..13 "="
         BINARY_EXPR@13..16
-          INT@13..14 "1"
+          LITERAL@13..14
+            INT@13..14 "1"
           PLUS@14..15 "+"
-          INT@15..16 "2"
+          LITERAL@15..16
+            INT@15..16 "2"
       COMMA@16..17 ","
       WHITESPACE@17..18 " "
       PARAMETER@18..20
