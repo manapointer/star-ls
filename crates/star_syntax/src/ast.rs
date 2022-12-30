@@ -71,6 +71,37 @@ pub enum ArgumentKind {
     Normal,
 }
 
+pub enum ListCompClause {
+    ForComp,
+    IfComp,
+}
+
+impl fmt::Display for ListCompClause {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
+}
+
+impl AstNode for ListCompClause {
+    fn can_cast(kind: SyntaxKind) -> bool
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self>
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        todo!()
+    }
+}
+
 pub enum Stmt {
     DefStmt(DefStmt),
     IfStmt,
@@ -235,12 +266,12 @@ pub enum Expr {
     BinaryExpr(BinaryExpr),
     TupleExpr(TupleExpr),
     LambdaExpr(LambdaExpr),
-    DotExpr,
-    CallExpr,
-    SliceExpr,
-    ListExpr,
+    DotExpr(DotExpr),
+    CallExpr(CallExpr),
+    SliceExpr(SliceExpr),
+    ListExpr(ListExpr),
     DictExpr,
-    ListComp,
+    ListComp(ListComp),
     DictComp,
     Literal,
 }
@@ -253,12 +284,12 @@ impl fmt::Display for Expr {
             Expr::BinaryExpr(expr) => fmt::Display::fmt(expr, f),
             Expr::TupleExpr(expr) => fmt::Display::fmt(expr, f),
             Expr::LambdaExpr(expr) => fmt::Display::fmt(expr, f),
-            Expr::DotExpr => todo!(),
-            Expr::CallExpr => todo!(),
-            Expr::SliceExpr => todo!(),
-            Expr::ListExpr => todo!(),
+            Expr::DotExpr(expr) => fmt::Display::fmt(expr, f),
+            Expr::CallExpr(expr) => fmt::Display::fmt(expr, f),
+            Expr::SliceExpr(expr) => fmt::Display::fmt(expr, f),
+            Expr::ListExpr(expr) => fmt::Display::fmt(expr, f),
             Expr::DictExpr => todo!(),
-            Expr::ListComp => todo!(),
+            Expr::ListComp(expr) => fmt::Display::fmt(expr, f),
             Expr::DictComp => todo!(),
             Expr::Literal => todo!(),
         }
@@ -312,14 +343,15 @@ impl AstNode for Expr {
             Expr::BinaryExpr(expr) => expr.syntax(),
             Expr::TupleExpr(expr) => expr.syntax(),
             Expr::LambdaExpr(expr) => expr.syntax(),
-            Expr::DotExpr => todo!(),
-            Expr::CallExpr => todo!(),
-            Expr::SliceExpr => todo!(),
-            Expr::ListExpr => todo!(),
-            Expr::DictExpr => todo!(),
-            Expr::ListComp => todo!(),
+            Expr::DotExpr(expr) => expr.syntax(),
+            Expr::CallExpr(expr) => expr.syntax(),
+            // Expr::SliceExpr(expr) => expr.syntax(),
+            Expr::ListExpr(expr) => expr.syntax(),
+            // Expr::DictExpr(expr) => expr.syntax(),
+            Expr::ListComp(expr) => expr.syntax(),
             Expr::DictComp => todo!(),
             Expr::Literal => todo!(),
+            _ => todo!(),
         }
     }
 }
@@ -535,6 +567,10 @@ impl LambdaExpr {
     pub fn parameters(&self) -> Option<Parameters> {
         child(self.syntax())
     }
+
+    pub fn suite(&self) -> Option<Suite> {
+        child(self.syntax())
+    }
 }
 
 impl fmt::Display for LambdaExpr {
@@ -546,6 +582,230 @@ impl fmt::Display for LambdaExpr {
 impl AstNode for LambdaExpr {
     fn can_cast(kind: SyntaxKind) -> bool {
         kind == LAMBDA_EXPR
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct DotExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl DotExpr {
+    pub fn expr(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+
+    pub fn ident(&self) -> Option<Ident> {
+        child_token(self.syntax())
+    }
+}
+
+impl fmt::Display for DotExpr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for DotExpr {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == DOT_EXPR
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct CallExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl CallExpr {
+    pub fn expr(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+
+    pub fn arguments(&self) -> Option<Arguments> {
+        child(self.syntax())
+    }
+}
+
+impl fmt::Display for CallExpr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for CallExpr {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == CALL_EXPR
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct SliceExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl SliceExpr {
+    pub fn expr(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+
+    pub fn start(&self) -> Option<Expr> {
+        children(self.syntax()).nth(1)
+    }
+
+    pub fn end(&self) -> Option<Expr> {
+        children(self.syntax()).nth(2)
+    }
+
+    pub fn step(&self) -> Option<Expr> {
+        children(self.syntax()).nth(3)
+    }
+}
+
+impl fmt::Display for SliceExpr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for SliceExpr {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == SLICE_EXPR
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct ListExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl ListExpr {
+    pub fn elements(&self) -> Vec<Expr> {
+        children(self.syntax()).collect()
+    }
+}
+
+impl fmt::Display for ListExpr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for ListExpr {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == LIST_EXPR
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct ListComp {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl ListComp {
+    pub fn expr(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+}
+
+impl fmt::Display for ListComp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for ListComp {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == LIST_COMP
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct ListCompFor {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl ListCompFor {
+    pub fn expr(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+}
+
+impl fmt::Display for ListCompFor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for ListCompFor {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == LIST_COMP
     }
 
     fn cast(syntax: SyntaxNode) -> Option<Self> {
