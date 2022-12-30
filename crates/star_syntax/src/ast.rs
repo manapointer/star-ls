@@ -71,34 +71,45 @@ pub enum ArgumentKind {
     Normal,
 }
 
-pub enum ListCompClause {
-    ForComp,
-    IfComp,
+pub enum CompClause {
+    ForComp(CompFor),
+    IfComp(CompIf),
 }
 
-impl fmt::Display for ListCompClause {
+impl fmt::Display for CompClause {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         todo!()
     }
 }
 
-impl AstNode for ListCompClause {
+impl AstNode for CompClause {
     fn can_cast(kind: SyntaxKind) -> bool
     where
         Self: Sized,
     {
-        todo!()
+        matches!(kind, LIST_COMP_IF | LIST_COMP_FOR)
     }
 
     fn cast(syntax: SyntaxNode) -> Option<Self>
     where
         Self: Sized,
     {
-        todo!()
+        if Self::can_cast(syntax.kind()) {
+            Some(match syntax.kind() {
+                LIST_COMP_FOR => CompClause::ForComp(CompFor { syntax }),
+                LIST_COMP_IF => CompClause::IfComp(CompIf { syntax }),
+                _ => unreachable!(),
+            })
+        } else {
+            None
+        }
     }
 
     fn syntax(&self) -> &SyntaxNode {
-        todo!()
+        match self {
+            CompClause::ForComp(clause) => clause.syntax(),
+            CompClause::IfComp(clause) => clause.syntax(),
+        }
     }
 }
 
@@ -198,8 +209,8 @@ impl IfStmt {
     pub fn elif_conditions(&self) -> Vec<Expr> {
         self.syntax()
             .children_with_tokens()
-            .skip_while(|el| el.as_token().map(|token| token.kind()) != Some(T![if]))
-            .take_while(|el| el.as_token().map(|token| token.kind()) != Some(T![else]))
+            .skip_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![if]))
+            .take_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![else]))
             .filter_map(|el| el.into_node())
             .filter_map(Expr::cast)
             .collect()
@@ -208,8 +219,8 @@ impl IfStmt {
     pub fn elif_suites(&self) -> Vec<Suite> {
         self.syntax()
             .children_with_tokens()
-            .skip_while(|el| el.as_token().map(|token| token.kind()) != Some(T![if]))
-            .take_while(|el| el.as_token().map(|token| token.kind()) != Some(T![else]))
+            .skip_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![if]))
+            .take_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![else]))
             .filter_map(|el| el.into_node())
             .filter_map(Suite::cast)
             .collect()
@@ -218,7 +229,7 @@ impl IfStmt {
     pub fn else_condition(&self) -> Option<Expr> {
         self.syntax()
             .children_with_tokens()
-            .skip_while(|el| el.as_token().map(|token| token.kind()) != Some(T![else]))
+            .skip_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![else]))
             .filter_map(|el| el.into_node())
             .find_map(Expr::cast)
     }
@@ -226,7 +237,7 @@ impl IfStmt {
     pub fn else_suite(&self) -> Option<Suite> {
         self.syntax()
             .children_with_tokens()
-            .skip_while(|el| el.as_token().map(|token| token.kind()) != Some(T![else]))
+            .skip_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![else]))
             .filter_map(|el| el.into_node())
             .find_map(Suite::cast)
     }
@@ -761,6 +772,10 @@ impl ListComp {
     pub fn expr(&self) -> Option<Expr> {
         child(self.syntax())
     }
+
+    pub fn comp_clauses(&self) -> Vec<CompClause> {
+        children(self.syntax()).collect()
+    }
 }
 
 impl fmt::Display for ListComp {
@@ -787,25 +802,220 @@ impl AstNode for ListComp {
     }
 }
 
-pub struct ListCompFor {
+pub struct DictExpr {
     pub(crate) syntax: SyntaxNode,
 }
 
-impl ListCompFor {
-    pub fn expr(&self) -> Option<Expr> {
+impl DictExpr {
+    pub fn entries(&self) -> Option<Entries> {
         child(self.syntax())
     }
 }
 
-impl fmt::Display for ListCompFor {
+impl fmt::Display for DictExpr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(self.syntax(), f)
     }
 }
 
-impl AstNode for ListCompFor {
+impl AstNode for DictExpr {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == DICT_EXPR
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct DictComp {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl DictComp {
+    pub fn expr(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+
+    pub fn comp_clauses(&self) -> Vec<CompClause> {
+        children(self.syntax()).collect()
+    }
+}
+
+impl fmt::Display for DictComp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for DictComp {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == DICT_COMP
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct CompFor {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl CompFor {
+    pub fn loop_variables(&self) -> Vec<Expr> {
+        self.syntax()
+            .children_with_tokens()
+            .take_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![in]))
+            .filter_map(|el| el.into_node())
+            .filter_map(Expr::cast)
+            .collect()
+    }
+
+    pub fn expr(&self) -> Option<Expr> {
+        self.syntax()
+            .children_with_tokens()
+            .skip_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![in]))
+            .filter_map(|el| el.into_node())
+            .find_map(Expr::cast)
+    }
+}
+
+impl fmt::Display for CompFor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for CompFor {
     fn can_cast(kind: SyntaxKind) -> bool {
         kind == LIST_COMP
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct CompIf {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl CompIf {
+    pub fn expr(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+}
+
+impl fmt::Display for CompIf {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for CompIf {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == LIST_COMP_IF
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct Entries {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl Entries {
+    pub fn entries(&self) -> Vec<Entries> {
+        children(self.syntax()).collect()
+    }
+}
+
+impl fmt::Display for Entries {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for Entries {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == ENTRIES
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct Entry {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl Entry {
+    pub fn key(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+
+    pub fn value(&self) -> Option<Expr> {
+        self.syntax()
+            .children_with_tokens()
+            .skip_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![:]))
+            .filter_map(|el| el.into_node())
+            .find_map(Expr::cast)
+    }
+}
+
+impl fmt::Display for Entry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for Entry {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == ENTRY
     }
 
     fn cast(syntax: SyntaxNode) -> Option<Self> {
