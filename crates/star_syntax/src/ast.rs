@@ -59,6 +59,174 @@ pub enum BinaryOp {
     FloorDiv,
 }
 
+pub enum ParameterKind {
+    Args,
+    Kwargs,
+    Normal,
+}
+
+pub enum ArgumentKind {
+    Args,
+    Kwargs,
+    Normal,
+}
+
+pub enum Stmt {
+    DefStmt(DefStmt),
+    IfStmt,
+    ForStmt,
+    SimpleStmt,
+}
+
+impl fmt::Display for Stmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Stmt::DefStmt(stmt) => fmt::Display::fmt(stmt, f),
+            Stmt::IfStmt => todo!(),
+            Stmt::ForStmt => todo!(),
+            Stmt::SimpleStmt => todo!(),
+        }
+    }
+}
+
+impl AstNode for Stmt {
+    fn can_cast(kind: SyntaxKind) -> bool
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self>
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        todo!()
+    }
+}
+
+pub struct DefStmt {
+    syntax: SyntaxNode,
+}
+
+impl DefStmt {
+    pub fn name(&self) -> Option<Ident> {
+        child_token(self.syntax())
+    }
+
+    pub fn parameters(&self) -> Option<Parameters> {
+        child(self.syntax())
+    }
+
+    pub fn suite(&self) -> Option<Suite> {
+        child(self.syntax())
+    }
+}
+
+impl fmt::Display for DefStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for DefStmt {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == DEF_STMT
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct IfStmt {
+    syntax: SyntaxNode,
+}
+
+impl IfStmt {
+    pub fn if_condition(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+
+    pub fn if_branch(&self) -> Option<Suite> {
+        child(self.syntax())
+    }
+
+    pub fn elif_conditions(&self) -> Vec<Expr> {
+        self.syntax()
+            .children_with_tokens()
+            .skip_while(|el| el.as_token().map(|token| token.kind()) != Some(T![if]))
+            .take_while(|el| el.as_token().map(|token| token.kind()) != Some(T![else]))
+            .filter_map(|el| {
+                let node = match el.into_node() {
+                    Some(node) => node,
+                    None => return None,
+                };
+                Expr::cast(node)
+            })
+            .collect()
+    }
+
+    pub fn elif_suites(&self) -> Vec<Suite> {
+        self.syntax()
+            .children_with_tokens()
+            .skip_while(|el| el.as_token().map(|token| token.kind()) != Some(T![if]))
+            .take_while(|el| el.as_token().map(|token| token.kind()) != Some(T![else]))
+            .filter_map(|el| {
+                let node = match el.into_node() {
+                    Some(node) => node,
+                    None => return None,
+                };
+                Suite::cast(node)
+            })
+            .collect()
+    }
+
+    pub fn parameters(&self) -> Option<Parameters> {
+        child(self.syntax())
+    }
+
+    pub fn suite(&self) -> Option<Suite> {
+        child(self.syntax())
+    }
+}
+
+impl fmt::Display for IfStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for IfStmt {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == IF_STMT
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
 pub enum Expr {
     IfExpr(IfExpr),
     UnaryExpr(UnaryExpr),
@@ -125,6 +293,9 @@ impl AstNode for Expr {
         if Self::can_cast(syntax.kind()) {
             Some(match syntax.kind() {
                 IF_EXPR => Expr::IfExpr(IfExpr { syntax }),
+                UNARY_EXPR => Expr::UnaryExpr(UnaryExpr { syntax }),
+                BINARY_EXPR => Expr::BinaryExpr(BinaryExpr { syntax }),
+                TUPLE_EXPR => Expr::TupleExpr(TupleExpr { syntax }),
                 _ => todo!(),
             })
         } else {
@@ -359,10 +530,9 @@ pub struct LambdaExpr {
 }
 
 impl LambdaExpr {
-    pub fn parameters(&self) -> Option
-    // pub fn exprs(&self) -> AstChildren<Expr> {
-    //     children(self.syntax())
-    // }
+    pub fn parameters(&self) -> Option<Parameters> {
+        child(self.syntax())
+    }
 }
 
 impl fmt::Display for LambdaExpr {
@@ -394,7 +564,9 @@ pub struct Parameters {
 }
 
 impl Parameters {
-    pub fn parameters(&self) -> AstChildren<>
+    pub fn parameters(&self) -> AstChildren<Parameter> {
+        children(self.syntax())
+    }
 }
 
 impl fmt::Display for Parameters {
@@ -426,18 +598,164 @@ pub struct Parameter {
 }
 
 impl Parameter {
-    // pub fn name
+    pub fn kind(&self) -> ParameterKind {
+        match self
+            .syntax()
+            .first_child_or_token()
+            .and_then(|el| el.into_token())
+            .map(|tok| tok.kind())
+        {
+            Some(T![*]) => ParameterKind::Args,
+            Some(T![**]) => ParameterKind::Kwargs,
+            _ => ParameterKind::Normal,
+        }
+    }
+
+    pub fn name(&self) -> Option<Ident> {
+        self.syntax()
+            .children_with_tokens()
+            .filter_map(|el| el.into_token())
+            .find_map(Ident::cast)
+    }
+
+    pub fn default(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
 }
 
-impl fmt::Display for Parameters {
+impl fmt::Display for Parameter {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(self.syntax(), f)
     }
 }
 
-impl AstNode for Parameters {
+impl AstNode for Parameter {
     fn can_cast(kind: SyntaxKind) -> bool {
-        kind == PARAMETERS
+        kind == PARAMETER
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct Arguments {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl Arguments {
+    pub fn arguments(&self) -> AstChildren<Argument> {
+        children(self.syntax())
+    }
+}
+
+impl fmt::Display for Arguments {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for Arguments {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == ARGUMENTS
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct Argument {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl Argument {
+    pub fn kind(&self) -> ArgumentKind {
+        match self
+            .syntax()
+            .first_child_or_token()
+            .and_then(|el| el.into_token())
+            .map(|tok| tok.kind())
+        {
+            Some(T![*]) => ArgumentKind::Args,
+            Some(T![**]) => ArgumentKind::Kwargs,
+            _ => ArgumentKind::Normal,
+        }
+    }
+
+    pub fn name(&self) -> Option<Ident> {
+        self.syntax()
+            .children_with_tokens()
+            .filter_map(|el| el.into_token())
+            .find_map(Ident::cast)
+    }
+
+    pub fn value(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+}
+
+impl fmt::Display for Argument {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for Argument {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == ARGUMENT
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct Suite {
+    pub(crate) syntax: SyntaxNode,
+}
+
+impl Suite {
+    pub fn statements(&self) -> Vec<Stmt> {
+        children(self.syntax()).collect()
+    }
+
+    // pub fn simple_stmt(&self) -> Option<>
+}
+
+impl fmt::Display for Suite {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for Suite {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == SUITE
     }
 
     fn cast(syntax: SyntaxNode) -> Option<Self> {
@@ -504,4 +822,11 @@ fn children<N: AstNode>(parent: &SyntaxNode) -> AstChildren<N> {
         inner: parent.children(),
         _ph: PhantomData,
     }
+}
+
+fn child_token<T: AstToken>(parent: &SyntaxNode) -> Option<T> {
+    parent
+        .children_with_tokens()
+        .filter_map(|el| el.into_token())
+        .find_map(T::cast)
 }
