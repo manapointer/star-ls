@@ -169,13 +169,8 @@ impl IfStmt {
             .children_with_tokens()
             .skip_while(|el| el.as_token().map(|token| token.kind()) != Some(T![if]))
             .take_while(|el| el.as_token().map(|token| token.kind()) != Some(T![else]))
-            .filter_map(|el| {
-                let node = match el.into_node() {
-                    Some(node) => node,
-                    None => return None,
-                };
-                Expr::cast(node)
-            })
+            .filter_map(|el| el.into_node())
+            .filter_map(Expr::cast)
             .collect()
     }
 
@@ -184,18 +179,25 @@ impl IfStmt {
             .children_with_tokens()
             .skip_while(|el| el.as_token().map(|token| token.kind()) != Some(T![if]))
             .take_while(|el| el.as_token().map(|token| token.kind()) != Some(T![else]))
-            .filter_map(|el| {
-                let node = match el.into_node() {
-                    Some(node) => node,
-                    None => return None,
-                };
-                Suite::cast(node)
-            })
+            .filter_map(|el| el.into_node())
+            .filter_map(Suite::cast)
             .collect()
     }
 
-    pub fn parameters(&self) -> Option<Parameters> {
-        child(self.syntax())
+    pub fn else_condition(&self) -> Option<Expr> {
+        self.syntax()
+            .children_with_tokens()
+            .skip_while(|el| el.as_token().map(|token| token.kind()) != Some(T![else]))
+            .filter_map(|el| el.into_node())
+            .find_map(Expr::cast)
+    }
+
+    pub fn else_suite(&self) -> Option<Suite> {
+        self.syntax()
+            .children_with_tokens()
+            .skip_while(|el| el.as_token().map(|token| token.kind()) != Some(T![else]))
+            .filter_map(|el| el.into_node())
+            .find_map(Suite::cast)
     }
 
     pub fn suite(&self) -> Option<Suite> {
