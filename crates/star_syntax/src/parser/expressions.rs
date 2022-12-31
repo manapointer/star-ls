@@ -41,7 +41,7 @@ pub(crate) fn expression_or_tuple(p: &mut Parser, parens: bool, force_expr_list:
         len += 1;
     }
 
-    // test tuple_expr_invalid
+    // test_err tuple_expr_invalid
     // (1, 2 def
     if parens && !p.expect(T![')']) {
         if did_checkpoint {
@@ -257,9 +257,14 @@ pub(crate) fn primary_expr(p: &mut Parser) -> bool {
                         arguments(p);
                         p.eat(T![,]);
                     }
-                    // TODO: Recover strategy
-                    p.expect(T![')']);
+
+                    // test_err call_expr_recover
+                    // foo(1, 2, def 123)
+                    let res = p.expect(T![')']);
                     p.exit();
+                    if !res {
+                        p.error_and_recover(RECOVERY_SET);
+                    }
                 }
                 T!['['] => {
                     p.enter_at(checkpoint, SLICE_EXPR);
