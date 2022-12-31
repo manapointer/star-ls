@@ -2,38 +2,45 @@
   SIMPLE_STMT@0..15
     LIST_COMP@0..14
       L_BRACK@0..1 "["
-      IDENT@1..2 "x"
+      LITERAL@1..2
+        IDENT@1..2 "x"
       WHITESPACE@2..3 " "
       LIST_COMP_FOR@3..13
         FOR_KW@3..6 "for"
         WHITESPACE@6..7 " "
         LOOP_VARIABLES@7..8
-          IDENT@7..8 "x"
+          LITERAL@7..8
+            IDENT@7..8 "x"
         WHITESPACE@8..9 " "
         IN_KW@9..11 "in"
         WHITESPACE@11..12 " "
-        IDENT@12..13 "y"
+        LITERAL@12..13
+          IDENT@12..13 "y"
       R_BRACK@13..14 "]"
     NEWLINE@14..15 "\n"
   SIMPLE_STMT@15..35
     LIST_COMP@15..34
       L_BRACK@15..16 "["
-      IDENT@16..17 "x"
+      LITERAL@16..17
+        IDENT@16..17 "x"
       WHITESPACE@17..18 " "
       LIST_COMP_FOR@18..28
         FOR_KW@18..21 "for"
         WHITESPACE@21..22 " "
         LOOP_VARIABLES@22..23
-          IDENT@22..23 "x"
+          LITERAL@22..23
+            IDENT@22..23 "x"
         WHITESPACE@23..24 " "
         IN_KW@24..26 "in"
         WHITESPACE@26..27 " "
-        IDENT@27..28 "y"
+        LITERAL@27..28
+          IDENT@27..28 "y"
       WHITESPACE@28..29 " "
       LIST_COMP_IF@29..33
         IF_KW@29..31 "if"
         WHITESPACE@31..32 " "
-        IDENT@32..33 "x"
+        LITERAL@32..33
+          IDENT@32..33 "x"
       R_BRACK@33..34 "]"
     NEWLINE@34..35 "\n"
   SIMPLE_STMT@35..75
@@ -41,40 +48,48 @@
       L_BRACK@35..36 "["
       TUPLE_EXPR@36..42
         L_PAREN@36..37 "("
-        IDENT@37..38 "x"
+        LITERAL@37..38
+          IDENT@37..38 "x"
         COMMA@38..39 ","
         WHITESPACE@39..40 " "
-        IDENT@40..41 "y"
+        LITERAL@40..41
+          IDENT@40..41 "y"
         R_PAREN@41..42 ")"
       WHITESPACE@42..43 " "
       LIST_COMP_FOR@43..53
         FOR_KW@43..46 "for"
         WHITESPACE@46..47 " "
         LOOP_VARIABLES@47..48
-          IDENT@47..48 "x"
+          LITERAL@47..48
+            IDENT@47..48 "x"
         WHITESPACE@48..49 " "
         IN_KW@49..51 "in"
         WHITESPACE@51..52 " "
-        IDENT@52..53 "a"
+        LITERAL@52..53
+          IDENT@52..53 "a"
       WHITESPACE@53..54 " "
       LIST_COMP_FOR@54..64
         FOR_KW@54..57 "for"
         WHITESPACE@57..58 " "
         LOOP_VARIABLES@58..59
-          IDENT@58..59 "y"
+          LITERAL@58..59
+            IDENT@58..59 "y"
         WHITESPACE@59..60 " "
         IN_KW@60..62 "in"
         WHITESPACE@62..63 " "
-        IDENT@63..64 "b"
+        LITERAL@63..64
+          IDENT@63..64 "b"
       WHITESPACE@64..65 " "
       LIST_COMP_IF@65..74
         IF_KW@65..67 "if"
         WHITESPACE@67..68 " "
         BINARY_EXPR@68..74
-          IDENT@68..69 "x"
+          LITERAL@68..69
+            IDENT@68..69 "x"
           WHITESPACE@69..70 " "
           EQ_EQ@70..72 "=="
           WHITESPACE@72..73 " "
-          IDENT@73..74 "y"
+          LITERAL@73..74
+            IDENT@73..74 "y"
       R_BRACK@74..75 "]"
     NEWLINE@75..75 ""

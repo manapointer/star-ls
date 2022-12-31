@@ -1,0 +1,15 @@
+ FILE@0..9
+  SIMPLE_STMT@0..9
+    TUPLE_EXPR@0..5
+      L_PAREN@0..1 "("
+      LITERAL@1..2
+        INT@1..2 "1"
+      COMMA@2..3 ","
+      WHITESPACE@3..4 " "
+      LITERAL@4..5
+        INT@4..5 "2"
+    WHITESPACE@5..6 " "
+    ERROR@6..9
+      DEF_KW@6..9 "def"
+    NEWLINE@9..9 ""
+5:expected R_PAREN

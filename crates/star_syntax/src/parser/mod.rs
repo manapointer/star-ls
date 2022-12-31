@@ -9,7 +9,7 @@ use std::mem;
 
 mod arguments;
 mod expressions;
-mod params;
+mod parameters;
 mod statements;
 mod suite;
 
@@ -18,7 +18,7 @@ mod tests;
 
 use arguments::*;
 use expressions::*;
-use params::*;
+use parameters::*;
 use statements::*;
 use suite::*;
 
@@ -112,6 +112,12 @@ impl<'a> Parser<'a> {
         }
         self.do_bump(kind);
         true
+    }
+
+    fn error_and_recover(&mut self, target: SyntaxKindSet) {
+        self.enter(ERROR);
+        self.eat_until(target);
+        self.exit();
     }
 
     fn eat_until(&mut self, target: SyntaxKindSet) {
