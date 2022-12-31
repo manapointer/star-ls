@@ -18,6 +18,7 @@ pub(crate) const EXPR_START: SyntaxKindSet = ATOM_EXPR_START.union(SyntaxKindSet
 // (x)
 // (x, y + 1)
 // (x, y + 1, z + 2)
+// (x, y, z,)
 pub(crate) fn expression_or_tuple(p: &mut Parser, parens: bool, force_expr_list: bool) -> usize {
     let checkpoint = p.checkpoint();
     let mut did_checkpoint = false;
@@ -40,6 +41,7 @@ pub(crate) fn expression_or_tuple(p: &mut Parser, parens: bool, force_expr_list:
         test(p, true);
         len += 1;
     }
+    p.eat(T![,]);
 
     // test_err tuple_expr_invalid
     // (1, 2 def
