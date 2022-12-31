@@ -78,7 +78,10 @@ pub enum CompClause {
 
 impl fmt::Display for CompClause {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+        match self {
+            CompClause::ForComp(comp) => fmt::Display::fmt(comp, f),
+            CompClause::IfComp(comp) => fmt::Display::fmt(comp, f),
+        }
     }
 }
 
@@ -429,7 +432,7 @@ impl AstNode for SmallStmt {
 
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            SmallStmt::ReturnStmt(stmt) => todo!(),
+            SmallStmt::ReturnStmt(stmt) => stmt.syntax(),
             SmallStmt::BreakStmt(stmt) => stmt.syntax(),
             SmallStmt::ContinueStmt(stmt) => stmt.syntax(),
             SmallStmt::PassStmt(stmt) => stmt.syntax(),
@@ -740,7 +743,6 @@ impl AstNode for Expr {
             Expr::ListComp(expr) => expr.syntax(),
             Expr::DictComp(expr) => expr.syntax(),
             Expr::Literal(expr) => expr.syntax(),
-            _ => todo!(),
         }
     }
 }
