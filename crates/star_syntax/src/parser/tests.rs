@@ -4,17 +4,25 @@ use std::{
 };
 
 use expect_test::expect_file;
+use runfiles::find_runfiles_dir;
 
 use crate::{parse_file, render};
 
 fn project_root() -> PathBuf {
-    Path::new(
-        &env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| env!("CARGO_MANIFEST_DIR").to_string()),
-    )
-    .ancestors()
-    .nth(2)
-    .unwrap()
-    .to_path_buf()
+    eprintln!("whoa: {}", find_runfiles_dir().unwrap().display());
+
+    find_runfiles_dir()
+        .map(|p| p.join("star-ls"))
+        .unwrap_or_else(|_| {
+            Path::new(
+                &env::var("CARGO_MANIFEST_DIR")
+                    .unwrap_or_else(|_| env!("CARGO_MANIFEST_DIR").to_string()),
+            )
+            .ancestors()
+            .nth(2)
+            .unwrap()
+            .to_path_buf()
+        })
 }
 
 fn collect_star_files(
@@ -55,6 +63,13 @@ fn collect_star_files(
 fn dir_tests() {
     let filter_str = env::var("STAR_PARSER_TESTS").unwrap_or_else(|_| String::new());
     let filters: Vec<&str> = filter_str.split(',').map(str::trim).collect();
+
+    eprintln!(
+        "{}",
+        project_root()
+            .join("crates/star_syntax/src/parser/test_data")
+            .display()
+    );
 
     let star_files = collect_star_files(
         &project_root().join("crates/star_syntax/src/parser/test_data"),

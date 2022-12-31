@@ -1,3 +1,5 @@
+workspace(name = "star-ls")
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 # To find additional information on this release or newer ones visit:
@@ -27,10 +29,10 @@ crates_repository(
     name = "crate_index",
     annotations = {
         "salsa-2022": [crate.annotation(
-            shallow_since = "1669697685 +0000",
+            shallow_since = "1672331873 +0000",
         )],
         "salsa-2022-macros": [crate.annotation(
-            shallow_since = "1669697685 +0000",
+            shallow_since = "1672331873 +0000",
         )],
     },
     cargo_lockfile = "//:Cargo.lock",
@@ -41,6 +43,7 @@ crates_repository(
         "//:crates/star_ide/Cargo.toml",
         "//crates/star_ls:Cargo.toml",
         "//crates/star_syntax:Cargo.toml",
+        "//vendor/runfiles:Cargo.toml",
         "//:xtask/Cargo.toml",
     ],
 )

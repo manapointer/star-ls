@@ -159,8 +159,6 @@ impl SyntaxKind {
 
 impl From<SyntaxKind> for rowan::SyntaxKind {
     fn from(kind: SyntaxKind) -> Self {
-        // fo x in y {}
-
         Self(kind as u16)
     }
 }
