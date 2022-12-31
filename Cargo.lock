@@ -93,7 +93,7 @@ dependencies = [
  "autocfg",
  "cfg-if",
  "crossbeam-utils",
- "memoffset 0.7.1",
+ "memoffset 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "scopeguard",
 ]
 
@@ -128,6 +128,10 @@ dependencies = [
  "once_cell",
  "parking_lot_core",
 ]
+
+[[package]]
+name = "direct-cargo-bazel-deps"
+version = "0.0.1"
 
 [[package]]
 name = "dissimilar"
@@ -326,9 +330,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.16.0"
+version = "1.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860"
+checksum = "6f61fba1741ea2b3d6a1e3178721804bb716a68a6aeba1149b5d52e3d464ea66"
 
 [[package]]
 name = "parking_lot"
@@ -416,7 +420,7 @@ checksum = "5811547e7ba31e903fe48c8ceab10d40d70a101f3d15523c847cce91aa71f332"
 dependencies = [
  "countme",
  "hashbrown",
- "memoffset 0.6.5",
+ "memoffset 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-hash",
  "text-size",
 ]
@@ -436,6 +440,24 @@ checksum = "7b4b9743ed687d4b4bcedf9ff5eaa7398495ae14e61cba0a295704edbc7decde"
 [[package]]
 name = "salsa-2022"
 version = "0.1.0"
+source = "git+https://github.com/salsa-rs/salsa?rev=20c7834ff34fd00a41b59bec61f3d5c85ea3abd4#20c7834ff34fd00a41b59bec61f3d5c85ea3abd4"
+dependencies = [
+ "arc-swap",
+ "crossbeam",
+ "crossbeam-utils",
+ "dashmap",
+ "hashlink",
+ "indexmap",
+ "log",
+ "parking_lot",
+ "rustc-hash",
+ "salsa-2022-macros 0.1.0 (git+https://github.com/salsa-rs/salsa?rev=20c7834ff34fd00a41b59bec61f3d5c85ea3abd4)",
+ "smallvec",
+]
+
+[[package]]
+name = "salsa-2022"
+version = "0.1.0"
 source = "git+https://github.com/manapointer/salsa?rev=f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7#f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7"
 dependencies = [
  "arc-swap",
@@ -447,8 +469,20 @@ dependencies = [
  "log",
  "parking_lot",
  "rustc-hash",
- "salsa-2022-macros",
+ "salsa-2022-macros 0.1.0 (git+https://github.com/manapointer/salsa?rev=f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7)",
  "smallvec",
+]
+
+[[package]]
+name = "salsa-2022-macros"
+version = "0.1.0"
+source = "git+https://github.com/salsa-rs/salsa?rev=20c7834ff34fd00a41b59bec61f3d5c85ea3abd4#20c7834ff34fd00a41b59bec61f3d5c85ea3abd4"
+dependencies = [
+ "eyre",
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -521,7 +555,7 @@ checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 name = "star_db"
 version = "0.1.0"
 dependencies = [
- "salsa-2022",
+ "salsa-2022 0.1.0 (git+https://github.com/salsa-rs/salsa?rev=20c7834ff34fd00a41b59bec61f3d5c85ea3abd4)",
  "star_syntax",
 ]
 
@@ -537,7 +571,7 @@ dependencies = [
  "lsp-server",
  "lsp-types",
  "rayon",
- "salsa-2022",
+ "salsa-2022 0.1.0 (git+https://github.com/manapointer/salsa?rev=f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7)",
  "serde",
  "serde_json",
  "star_db",
