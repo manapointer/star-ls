@@ -1,4 +1,4 @@
- FILE@0..40
+ FILE@0..51
   SIMPLE_STMT@0..5
     TUPLE_EXPR@0..4
       LITERAL@0..1
@@ -36,7 +36,7 @@
           INT@20..21 "1"
       R_PAREN@21..22 ")"
     NEWLINE@22..23 "\n"
-  SIMPLE_STMT@23..40
+  SIMPLE_STMT@23..41
     TUPLE_EXPR@23..40
       L_PAREN@23..24 "("
       LITERAL@24..25
@@ -62,4 +62,20 @@
         LITERAL@38..39
           INT@38..39 "2"
       R_PAREN@39..40 ")"
-    NEWLINE@40..40 ""
+    NEWLINE@40..41 "\n"
+  SIMPLE_STMT@41..51
+    TUPLE_EXPR@41..51
+      L_PAREN@41..42 "("
+      LITERAL@42..43
+        IDENT@42..43 "x"
+      COMMA@43..44 ","
+      WHITESPACE@44..45 " "
+      LITERAL@45..46
+        IDENT@45..46 "y"
+      COMMA@46..47 ","
+      WHITESPACE@47..48 " "
+      LITERAL@48..49
+        IDENT@48..49 "z"
+      COMMA@49..50 ","
+      R_PAREN@50..51 ")"
+    NEWLINE@51..51 ""

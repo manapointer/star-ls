@@ -10,13 +10,8 @@ pub(crate) fn statement(p: &mut Parser) {
         kind if SMALL_STMT_START.contains(kind) => simple_stmt(p),
         T!['\n'] => p.bump(T!['\n']),
         _ => {
-            p.error("Expected statement");
-            p.enter(ERROR);
-            while !p.at(EOF) && !p.at(T!['\n']) {
-                p.bump_any();
-            }
-            p.eat(T!['\n']);
-            p.exit();
+            p.error("expected statement");
+            p.error_and_recover(RECOVERY_SET);
         }
     }
 }
@@ -30,12 +25,8 @@ pub(crate) fn simple_stmt(p: &mut Parser) {
     }
     p.eat(T![;]);
     if !p.at(EOF) && !p.at(T!['\n']) {
-        p.enter(ERROR);
-        p.bump_any();
-        while !p.at(EOF) && !p.at(T!['\n']) {
-            p.bump_any();
-        }
-        p.exit();
+        p.error(&format!("unexpected token: {:?}", p.current()));
+        p.error_and_recover(RECOVERY_SET);
     }
     p.eat(T!['\n']);
     p.exit();

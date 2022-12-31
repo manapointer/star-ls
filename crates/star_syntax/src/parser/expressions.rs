@@ -41,15 +41,20 @@ pub(crate) fn expression_or_tuple(p: &mut Parser, parens: bool, force_expr_list:
         test(p, true);
         len += 1;
     }
-    p.eat(T![,]);
 
     // test_err tuple_expr_invalid
+    // 1, 1,
     // (1, 2 def
-    if parens && !p.expect(T![')']) {
+    if parens {
+        p.eat(T![,]);
+        let res = p.expect(T![')']);
         if did_checkpoint {
             p.exit();
         }
-        p.error_and_recover(RECOVERY_SET);
+        if !res {
+            p.error_and_recover(RECOVERY_SET);
+        }
+        return len;
     } else if did_checkpoint {
         p.exit();
     }
