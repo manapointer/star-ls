@@ -367,7 +367,7 @@ pub enum Expr {
     DictExpr(DictExpr),
     ListComp(ListComp),
     DictComp(DictComp),
-    Literal,
+    Literal(Literal),
 }
 
 impl fmt::Display for Expr {
@@ -385,7 +385,7 @@ impl fmt::Display for Expr {
             Expr::DictExpr(expr) => fmt::Display::fmt(expr, f),
             Expr::ListComp(expr) => fmt::Display::fmt(expr, f),
             Expr::DictComp(expr) => fmt::Display::fmt(expr, f),
-            Expr::Literal => todo!(),
+            Expr::Literal(expr) => fmt::Display::fmt(expr, f),
         }
     }
 }
@@ -453,7 +453,7 @@ impl AstNode for Expr {
             Expr::DictExpr(expr) => expr.syntax(),
             Expr::ListComp(expr) => expr.syntax(),
             Expr::DictComp(expr) => expr.syntax(),
-            Expr::Literal => todo!(),
+            Expr::Literal(expr) => expr.syntax(),
             _ => todo!(),
         }
     }
@@ -966,6 +966,69 @@ impl AstNode for DictComp {
     }
 }
 
+pub enum LiteralKind {
+    Ident(Ident),
+    Int(Int),
+    Float(Float),
+    String(String),
+}
+
+pub struct Literal {
+    syntax: SyntaxNode,
+}
+
+impl Literal {
+    pub fn token(&self) -> SyntaxToken {
+        self.syntax()
+            .children_with_tokens()
+            .find(|el| !el.kind().is_whitespace())
+            .and_then(|el| el.into_token())
+            .unwrap()
+    }
+
+    pub fn kind(&self) -> LiteralKind {
+        let token = self.token();
+
+        if let Some(token) = Int::cast(token.clone()) {
+            return LiteralKind::Int(token);
+        }
+
+        if let Some(token) = Float::cast(token.clone()) {
+            return LiteralKind::Float(token);
+        }
+
+        if let Some(token) = String::cast(token) {
+            return LiteralKind::String(token);
+        }
+
+        unreachable!()
+    }
+}
+
+impl fmt::Display for Literal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for Literal {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == LITERAL
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
 pub struct CompFor {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1335,6 +1398,90 @@ impl fmt::Display for Ident {
 impl AstToken for Ident {
     fn can_cast(kind: SyntaxKind) -> bool {
         kind == IDENT
+    }
+
+    fn cast(syntax: SyntaxToken) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxToken {
+        &self.syntax
+    }
+}
+
+pub struct Int {
+    pub(crate) syntax: SyntaxToken,
+}
+
+impl fmt::Display for Int {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.syntax, f)
+    }
+}
+
+impl AstToken for Int {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == INT
+    }
+
+    fn cast(syntax: SyntaxToken) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxToken {
+        &self.syntax
+    }
+}
+
+pub struct Float {
+    pub(crate) syntax: SyntaxToken,
+}
+
+impl fmt::Display for Float {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.syntax, f)
+    }
+}
+
+impl AstToken for Float {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == FLOAT
+    }
+
+    fn cast(syntax: SyntaxToken) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxToken {
+        &self.syntax
+    }
+}
+
+pub struct String {
+    pub(crate) syntax: SyntaxToken,
+}
+
+impl fmt::Display for String {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.syntax, f)
+    }
+}
+
+impl AstToken for String {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == STRING
     }
 
     fn cast(syntax: SyntaxToken) -> Option<Self> {

@@ -93,7 +93,7 @@ dependencies = [
  "autocfg",
  "cfg-if",
  "crossbeam-utils",
- "memoffset 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "memoffset 0.7.1",
  "scopeguard",
 ]
 
@@ -128,10 +128,6 @@ dependencies = [
  "once_cell",
  "parking_lot_core",
 ]
-
-[[package]]
-name = "direct-cargo-bazel-deps"
-version = "0.0.1"
 
 [[package]]
 name = "dissimilar"
@@ -420,7 +416,7 @@ checksum = "5811547e7ba31e903fe48c8ceab10d40d70a101f3d15523c847cce91aa71f332"
 dependencies = [
  "countme",
  "hashbrown",
- "memoffset 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "memoffset 0.6.5",
  "rustc-hash",
  "text-size",
 ]
