@@ -115,18 +115,18 @@ impl AstNode for CompClause {
 
 pub enum Stmt {
     DefStmt(DefStmt),
-    IfStmt,
-    ForStmt,
-    SimpleStmt,
+    IfStmt(IfStmt),
+    ForStmt(ForStmt),
+    SimpleStmt(SimpleStmt),
 }
 
 impl fmt::Display for Stmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Stmt::DefStmt(stmt) => fmt::Display::fmt(stmt, f),
-            Stmt::IfStmt => todo!(),
-            Stmt::ForStmt => todo!(),
-            Stmt::SimpleStmt => todo!(),
+            Stmt::IfStmt(stmt) => fmt::Display::fmt(stmt, f),
+            Stmt::ForStmt(stmt) => fmt::Display::fmt(stmt, f),
+            Stmt::SimpleStmt(stmt) => fmt::Display::fmt(stmt, f),
         }
     }
 }
@@ -136,18 +136,33 @@ impl AstNode for Stmt {
     where
         Self: Sized,
     {
-        todo!()
+        matches!(kind, DEF_STMT | IF_STMT | FOR_STMT | SIMPLE_STMT)
     }
 
     fn cast(syntax: SyntaxNode) -> Option<Self>
     where
         Self: Sized,
     {
-        todo!()
+        if Self::can_cast(syntax.kind()) {
+            Some(match syntax.kind() {
+                DEF_STMT => Stmt::DefStmt(DefStmt { syntax }),
+                IF_STMT => Stmt::IfStmt(IfStmt { syntax }),
+                FOR_STMT => Stmt::ForStmt(ForStmt { syntax }),
+                SIMPLE_STMT => Stmt::SimpleStmt(SimpleStmt { syntax }),
+                _ => unreachable!(),
+            })
+        } else {
+            None
+        }
     }
 
     fn syntax(&self) -> &SyntaxNode {
-        todo!()
+        match self {
+            Stmt::DefStmt(stmt) => stmt.syntax(),
+            Stmt::IfStmt(stmt) => stmt.syntax(),
+            Stmt::ForStmt(stmt) => stmt.syntax(),
+            Stmt::SimpleStmt(stmt) => stmt.syntax(),
+        }
     }
 }
 
@@ -202,7 +217,7 @@ impl IfStmt {
         child(self.syntax())
     }
 
-    pub fn if_branch(&self) -> Option<Suite> {
+    pub fn if_suite(&self) -> Option<Suite> {
         child(self.syntax())
     }
 
@@ -227,23 +242,11 @@ impl IfStmt {
     }
 
     pub fn else_condition(&self) -> Option<Expr> {
-        self.syntax()
-            .children_with_tokens()
-            .skip_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![else]))
-            .filter_map(|el| el.into_node())
-            .find_map(Expr::cast)
+        child_after_token(self.syntax(), T![else])
     }
 
     pub fn else_suite(&self) -> Option<Suite> {
-        self.syntax()
-            .children_with_tokens()
-            .skip_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![else]))
-            .filter_map(|el| el.into_node())
-            .find_map(Suite::cast)
-    }
-
-    pub fn suite(&self) -> Option<Suite> {
-        child(self.syntax())
+        child_after_token(self.syntax(), T![else])
     }
 }
 
@@ -271,6 +274,86 @@ impl AstNode for IfStmt {
     }
 }
 
+pub struct ForStmt {
+    syntax: SyntaxNode,
+}
+
+impl ForStmt {
+    pub fn loop_variables(&self) -> Vec<Expr> {
+        children_until_token(self.syntax(), T![in]).collect()
+    }
+
+    pub fn expr(&self) -> Option<Expr> {
+        child_after_token(self.syntax(), T![in])
+    }
+
+    pub fn suite(&self) -> Option<Suite> {
+        child(self.syntax())
+    }
+}
+
+impl fmt::Display for ForStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for ForStmt {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == FOR_STMT
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct SimpleStmt {
+    syntax: SyntaxNode,
+}
+
+impl SimpleStmt {
+    pub fn loop_variables(&self) -> Vec<Expr> {
+        children_until_token(self.syntax(), T![in]).collect()
+    }
+
+    pub fn expr(&self) -> Option<Expr> {
+        child_after_token(self.syntax(), T![in])
+    }
+}
+
+impl fmt::Display for SimpleStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for SimpleStmt {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == SIMPLE_STMT
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
 pub enum Expr {
     IfExpr(IfExpr),
     UnaryExpr(UnaryExpr),
@@ -281,9 +364,9 @@ pub enum Expr {
     CallExpr(CallExpr),
     SliceExpr(SliceExpr),
     ListExpr(ListExpr),
-    DictExpr,
+    DictExpr(DictExpr),
     ListComp(ListComp),
-    DictComp,
+    DictComp(DictComp),
     Literal,
 }
 
@@ -299,9 +382,9 @@ impl fmt::Display for Expr {
             Expr::CallExpr(expr) => fmt::Display::fmt(expr, f),
             Expr::SliceExpr(expr) => fmt::Display::fmt(expr, f),
             Expr::ListExpr(expr) => fmt::Display::fmt(expr, f),
-            Expr::DictExpr => todo!(),
+            Expr::DictExpr(expr) => fmt::Display::fmt(expr, f),
             Expr::ListComp(expr) => fmt::Display::fmt(expr, f),
-            Expr::DictComp => todo!(),
+            Expr::DictComp(expr) => fmt::Display::fmt(expr, f),
             Expr::Literal => todo!(),
         }
     }
@@ -340,7 +423,16 @@ impl AstNode for Expr {
                 UNARY_EXPR => Expr::UnaryExpr(UnaryExpr { syntax }),
                 BINARY_EXPR => Expr::BinaryExpr(BinaryExpr { syntax }),
                 TUPLE_EXPR => Expr::TupleExpr(TupleExpr { syntax }),
-                _ => todo!(),
+                LAMBDA_EXPR => Expr::LambdaExpr(LambdaExpr { syntax }),
+                DOT_EXPR => Expr::DotExpr(DotExpr { syntax }),
+                CALL_EXPR => Expr::CallExpr(CallExpr { syntax }),
+                SLICE_EXPR => Expr::SliceExpr(SliceExpr { syntax }),
+                LIST_EXPR => Expr::ListExpr(ListExpr { syntax }),
+                LIST_COMP => Expr::ListComp(ListComp { syntax }),
+                DICT_EXPR => Expr::DictExpr(DictExpr { syntax }),
+                DICT_COMP => Expr::DictComp(DictComp { syntax }),
+                LITERAL => Expr::Literal(Literal { syntax }),
+                _ => unreachable!(),
             })
         } else {
             None
@@ -356,11 +448,11 @@ impl AstNode for Expr {
             Expr::LambdaExpr(expr) => expr.syntax(),
             Expr::DotExpr(expr) => expr.syntax(),
             Expr::CallExpr(expr) => expr.syntax(),
-            // Expr::SliceExpr(expr) => expr.syntax(),
+            Expr::SliceExpr(expr) => expr.syntax(),
             Expr::ListExpr(expr) => expr.syntax(),
-            // Expr::DictExpr(expr) => expr.syntax(),
+            Expr::DictExpr(expr) => expr.syntax(),
             Expr::ListComp(expr) => expr.syntax(),
-            Expr::DictComp => todo!(),
+            Expr::DictComp(expr) => expr.syntax(),
             Expr::Literal => todo!(),
             _ => todo!(),
         }
@@ -880,20 +972,11 @@ pub struct CompFor {
 
 impl CompFor {
     pub fn loop_variables(&self) -> Vec<Expr> {
-        self.syntax()
-            .children_with_tokens()
-            .take_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![in]))
-            .filter_map(|el| el.into_node())
-            .filter_map(Expr::cast)
-            .collect()
+        children_until_token(self.syntax(), T![in]).collect()
     }
 
     pub fn expr(&self) -> Option<Expr> {
-        self.syntax()
-            .children_with_tokens()
-            .skip_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![in]))
-            .filter_map(|el| el.into_node())
-            .find_map(Expr::cast)
+        child_after_token(self.syntax(), T![in])
     }
 }
 
@@ -999,11 +1082,7 @@ impl Entry {
     }
 
     pub fn value(&self) -> Option<Expr> {
-        self.syntax()
-            .children_with_tokens()
-            .skip_while(|el| el.as_token().map(SyntaxToken::kind) != Some(T![:]))
-            .filter_map(|el| el.into_node())
-            .find_map(Expr::cast)
+        child_after_token(self.syntax(), T![:])
     }
 }
 
@@ -1294,6 +1373,32 @@ fn children<N: AstNode>(parent: &SyntaxNode) -> AstChildren<N> {
         inner: parent.children(),
         _ph: PhantomData,
     }
+}
+
+fn children_until_token<N: AstNode>(
+    parent: &SyntaxNode,
+    kind: SyntaxKind,
+) -> impl Iterator<Item = N> {
+    parent
+        .children_with_tokens()
+        .take_while(move |el| el.as_token().map(SyntaxToken::kind) != Some(kind))
+        .filter_map(|el| el.into_node())
+        .filter_map(N::cast)
+}
+
+fn children_after_token<N: AstNode>(
+    parent: &SyntaxNode,
+    kind: SyntaxKind,
+) -> impl Iterator<Item = N> {
+    parent
+        .children_with_tokens()
+        .skip_while(move |el| el.as_token().map(SyntaxToken::kind) != Some(kind))
+        .filter_map(|el| el.into_node())
+        .filter_map(N::cast)
+}
+
+fn child_after_token<N: AstNode>(parent: &SyntaxNode, kind: SyntaxKind) -> Option<N> {
+    children_after_token(parent, kind).next()
 }
 
 fn child_token<T: AstToken>(parent: &SyntaxNode) -> Option<T> {
