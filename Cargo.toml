@@ -4,5 +4,6 @@ members = [
     "crates/star_ide",
     "crates/star_ls", 
     "crates/star_syntax",
+    "vendor/runfiles",
     "xtask",
 ]

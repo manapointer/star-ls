@@ -1,5 +1,5 @@
 {
-  "checksum": "49b05507e4ecbf5a2bc5f231768b4b32f9bd1479fb31f1da087fb3fd0255b397",
+  "checksum": "6c011d7d17b6779e543af95777fbe45681ed603ac6a5c89393865bafe8f4224c",
   "crates": {
     "ahash 0.7.6": {
       "name": "ahash",
@@ -2519,6 +2519,34 @@
       },
       "license": "MIT OR Apache-2.0"
     },
+    "runfiles 0.1.0": {
+      "name": "runfiles",
+      "version": "0.1.0",
+      "repository": null,
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "runfiles",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "include": [
+                "**/*.rs"
+              ],
+              "exclude": []
+            }
+          }
+        }
+      ],
+      "library_target_name": "runfiles",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2021",
+        "version": "0.1.0"
+      },
+      "license": null
+    },
     "rustc-hash 1.1.0": {
       "name": "rustc-hash",
       "version": "1.1.0",
@@ -2598,7 +2626,7 @@
           "commitish": {
             "Rev": "20c7834ff34fd00a41b59bec61f3d5c85ea3abd4"
           },
-          "shallow_since": "1669697685 +0000",
+          "shallow_since": "1672331873 +0000",
           "strip_prefix": "components/salsa-2022"
         }
       },
@@ -2689,7 +2717,7 @@
           "commitish": {
             "Rev": "20c7834ff34fd00a41b59bec61f3d5c85ea3abd4"
           },
-          "shallow_since": "1669697685 +0000",
+          "shallow_since": "1672331873 +0000",
           "strip_prefix": "components/salsa-2022-macros"
         }
       },
@@ -4281,6 +4309,7 @@
   "binary_crates": [],
   "workspace_members": {
     "direct-cargo-bazel-deps 0.0.1": "",
+    "runfiles 0.1.0": "vendor/runfiles",
     "star_db 0.1.0": "crates/star_db",
     "star_ide 0.1.0": "crates/star_ide",
     "star_ls 0.1.0": "crates/star_ls",

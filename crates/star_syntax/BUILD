@@ -15,8 +15,8 @@ rust_test(
     name = "star_syntax_test",
     size = "small",
     crate = ":star_syntax",
-    data = glob(["src/parser/test_data/**"]),
+    data = glob(["src/parser/test_data/**/*"]),
     deps = all_crate_deps(
         normal_dev = True,
-    ),
+    ) + ["//vendor/runfiles"],
 )

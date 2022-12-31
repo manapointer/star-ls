@@ -321,12 +321,8 @@ pub struct SimpleStmt {
 }
 
 impl SimpleStmt {
-    pub fn loop_variables(&self) -> Vec<Expr> {
-        children_until_token(self.syntax(), T![in]).collect()
-    }
-
-    pub fn expr(&self) -> Option<Expr> {
-        child_after_token(self.syntax(), T![in])
+    pub fn statements(&self) -> Vec<SmallStmt> {
+        children(self.syntax()).collect()
     }
 }
 
@@ -339,6 +335,296 @@ impl fmt::Display for SimpleStmt {
 impl AstNode for SimpleStmt {
     fn can_cast(kind: SyntaxKind) -> bool {
         kind == SIMPLE_STMT
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub enum SmallStmt {
+    ReturnStmt(ReturnStmt),
+    BreakStmt(BreakStmt),
+    ContinueStmt(ContinueStmt),
+    PassStmt(PassStmt),
+    AssignStmt(AssignStmt),
+    ExprStmt(Expr),
+    LoadStmt(LoadStmt),
+}
+
+impl fmt::Display for SmallStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SmallStmt::ReturnStmt(stmt) => fmt::Display::fmt(stmt, f),
+            SmallStmt::BreakStmt(stmt) => fmt::Display::fmt(stmt, f),
+            SmallStmt::ContinueStmt(stmt) => fmt::Display::fmt(stmt, f),
+            SmallStmt::PassStmt(stmt) => fmt::Display::fmt(stmt, f),
+            SmallStmt::AssignStmt(stmt) => fmt::Display::fmt(stmt, f),
+            SmallStmt::ExprStmt(expr) => fmt::Display::fmt(expr, f),
+            SmallStmt::LoadStmt(stmt) => fmt::Display::fmt(stmt, f),
+        }
+    }
+}
+
+impl AstNode for SmallStmt {
+    fn can_cast(kind: SyntaxKind) -> bool
+    where
+        Self: Sized,
+    {
+        matches!(
+            kind,
+            RETURN_STMT
+                | BREAK_STMT
+                | CONTINUE_STMT
+                | PASS_STMT
+                | ASSIGN_STMT
+                | LOAD_STMT
+
+                // Include expression types
+                | IF_EXPR
+                | UNARY_EXPR
+                | BINARY_EXPR
+                | TUPLE_EXPR
+                | LAMBDA_EXPR
+                | DOT_EXPR
+                | CALL_EXPR
+                | SLICE_EXPR
+                | LIST_EXPR
+                | DICT_EXPR
+                | LIST_COMP
+                | DICT_COMP
+        )
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self>
+    where
+        Self: Sized,
+    {
+        if Self::can_cast(syntax.kind()) {
+            Some(match syntax.kind() {
+                RETURN_STMT => SmallStmt::ReturnStmt(ReturnStmt { syntax }),
+                BREAK_STMT => SmallStmt::ReturnStmt(ReturnStmt { syntax }),
+                CONTINUE_STMT => SmallStmt::ContinueStmt(ContinueStmt { syntax }),
+                PASS_STMT => SmallStmt::PassStmt(PassStmt { syntax }),
+                ASSIGN_STMT => SmallStmt::AssignStmt(AssignStmt { syntax }),
+                LOAD_STMT => SmallStmt::LoadStmt(LoadStmt { syntax }),
+                IF_EXPR | UNARY_EXPR | BINARY_EXPR | TUPLE_EXPR | LAMBDA_EXPR | DOT_EXPR
+                | CALL_EXPR | SLICE_EXPR | LIST_EXPR | DICT_EXPR | LIST_COMP | DICT_COMP => {
+                    SmallStmt::ExprStmt(Expr::cast(syntax).unwrap())
+                }
+                _ => unreachable!(),
+            })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            SmallStmt::ReturnStmt(stmt) => todo!(),
+            SmallStmt::BreakStmt(stmt) => stmt.syntax(),
+            SmallStmt::ContinueStmt(stmt) => stmt.syntax(),
+            SmallStmt::PassStmt(stmt) => stmt.syntax(),
+            SmallStmt::AssignStmt(stmt) => stmt.syntax(),
+            SmallStmt::ExprStmt(expr) => expr.syntax(),
+            SmallStmt::LoadStmt(stmt) => stmt.syntax(),
+        }
+    }
+}
+
+pub struct ReturnStmt {
+    syntax: SyntaxNode,
+}
+
+impl ReturnStmt {
+    pub fn expr(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+}
+
+impl fmt::Display for ReturnStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for ReturnStmt {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == RETURN_STMT
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct BreakStmt {
+    syntax: SyntaxNode,
+}
+
+impl BreakStmt {}
+
+impl fmt::Display for BreakStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for BreakStmt {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == BREAK_STMT
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct ContinueStmt {
+    syntax: SyntaxNode,
+}
+
+impl ContinueStmt {}
+
+impl fmt::Display for ContinueStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for ContinueStmt {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == CONTINUE_STMT
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct PassStmt {
+    syntax: SyntaxNode,
+}
+
+impl PassStmt {}
+
+impl fmt::Display for PassStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for PassStmt {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == PASS_STMT
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct AssignStmt {
+    syntax: SyntaxNode,
+}
+
+impl AssignStmt {
+    pub fn lhs(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+
+    pub fn rhs(&self) -> Option<Expr> {
+        children(self.syntax()).nth(1)
+    }
+}
+
+impl fmt::Display for AssignStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for AssignStmt {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == ASSIGN_STMT
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
+pub struct LoadStmt {
+    syntax: SyntaxNode,
+}
+
+impl LoadStmt {
+    pub fn lhs(&self) -> Option<Expr> {
+        child(self.syntax())
+    }
+
+    pub fn rhs(&self) -> Option<Expr> {
+        children(self.syntax()).nth(1)
+    }
+}
+
+impl fmt::Display for LoadStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for LoadStmt {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == LOAD_STMT
     }
 
     fn cast(syntax: SyntaxNode) -> Option<Self> {
@@ -367,7 +653,7 @@ pub enum Expr {
     DictExpr(DictExpr),
     ListComp(ListComp),
     DictComp(DictComp),
-    Literal,
+    Literal(Literal),
 }
 
 impl fmt::Display for Expr {
@@ -385,7 +671,7 @@ impl fmt::Display for Expr {
             Expr::DictExpr(expr) => fmt::Display::fmt(expr, f),
             Expr::ListComp(expr) => fmt::Display::fmt(expr, f),
             Expr::DictComp(expr) => fmt::Display::fmt(expr, f),
-            Expr::Literal => todo!(),
+            Expr::Literal(expr) => fmt::Display::fmt(expr, f),
         }
     }
 }
@@ -453,7 +739,7 @@ impl AstNode for Expr {
             Expr::DictExpr(expr) => expr.syntax(),
             Expr::ListComp(expr) => expr.syntax(),
             Expr::DictComp(expr) => expr.syntax(),
-            Expr::Literal => todo!(),
+            Expr::Literal(expr) => expr.syntax(),
             _ => todo!(),
         }
     }
@@ -966,6 +1252,69 @@ impl AstNode for DictComp {
     }
 }
 
+pub enum LiteralKind {
+    Ident(Ident),
+    Int(Int),
+    Float(Float),
+    String(String),
+}
+
+pub struct Literal {
+    syntax: SyntaxNode,
+}
+
+impl Literal {
+    pub fn token(&self) -> SyntaxToken {
+        self.syntax()
+            .children_with_tokens()
+            .find(|el| !el.kind().is_whitespace())
+            .and_then(|el| el.into_token())
+            .unwrap()
+    }
+
+    pub fn kind(&self) -> LiteralKind {
+        let token = self.token();
+
+        if let Some(token) = Int::cast(token.clone()) {
+            return LiteralKind::Int(token);
+        }
+
+        if let Some(token) = Float::cast(token.clone()) {
+            return LiteralKind::Float(token);
+        }
+
+        if let Some(token) = String::cast(token) {
+            return LiteralKind::String(token);
+        }
+
+        unreachable!()
+    }
+}
+
+impl fmt::Display for Literal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self.syntax(), f)
+    }
+}
+
+impl AstNode for Literal {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == LITERAL
+    }
+
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
+    }
+}
+
 pub struct CompFor {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1335,6 +1684,90 @@ impl fmt::Display for Ident {
 impl AstToken for Ident {
     fn can_cast(kind: SyntaxKind) -> bool {
         kind == IDENT
+    }
+
+    fn cast(syntax: SyntaxToken) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxToken {
+        &self.syntax
+    }
+}
+
+pub struct Int {
+    pub(crate) syntax: SyntaxToken,
+}
+
+impl fmt::Display for Int {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.syntax, f)
+    }
+}
+
+impl AstToken for Int {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == INT
+    }
+
+    fn cast(syntax: SyntaxToken) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxToken {
+        &self.syntax
+    }
+}
+
+pub struct Float {
+    pub(crate) syntax: SyntaxToken,
+}
+
+impl fmt::Display for Float {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.syntax, f)
+    }
+}
+
+impl AstToken for Float {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == FLOAT
+    }
+
+    fn cast(syntax: SyntaxToken) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+
+    fn syntax(&self) -> &SyntaxToken {
+        &self.syntax
+    }
+}
+
+pub struct String {
+    pub(crate) syntax: SyntaxToken,
+}
+
+impl fmt::Display for String {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.syntax, f)
+    }
+}
+
+impl AstToken for String {
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == STRING
     }
 
     fn cast(syntax: SyntaxToken) -> Option<Self> {
