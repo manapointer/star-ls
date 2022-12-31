@@ -350,8 +350,38 @@ impl<'src> Iterator for Lexer<'src> {
                 '&' => peek_or!('&', AND_EQ, AND),
                 '|' => peek_or!('|', OR_EQ, OR),
                 '^' => peek_or!('^', XOR_EQ, XOR),
-                '<' => todo!(),
-                '>' => todo!(),
+                '<' => match self.peek() {
+                    Some('<') => {
+                        self.bump();
+                        if matches!(self.peek(), Some('=')) {
+                            self.bump();
+                            LT_LT_EQ
+                        } else {
+                            LT_LT
+                        }
+                    }
+                    Some('=') => {
+                        self.bump();
+                        LT_EQ
+                    }
+                    _ => LT,
+                },
+                '>' => match self.peek() {
+                    Some('>') => {
+                        self.bump();
+                        if matches!(self.peek(), Some('=')) {
+                            self.bump();
+                            GT_GT_EQ
+                        } else {
+                            GT_GT
+                        }
+                    }
+                    Some('=') => {
+                        self.bump();
+                        GT_EQ
+                    }
+                    _ => GT,
+                },
                 '.' => DOT,
                 ',' => COMMA,
                 '=' => peek_or!('=', EQ_EQ, EQ),
