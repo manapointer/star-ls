@@ -1,5 +1,5 @@
 {
-  "checksum": "a66a2cd0f503ba86ebee02adceaead68e4c260b04c481e9d123d9343736e6c87",
+  "checksum": "49b05507e4ecbf5a2bc5f231768b4b32f9bd1479fb31f1da087fb3fd0255b397",
   "crates": {
     "ahash 0.7.6": {
       "name": "ahash",
@@ -57,7 +57,7 @@
             ],
             "cfg(not(all(target_arch = \"arm\", target_os = \"none\")))": [
               {
-                "id": "once_cell 1.16.0",
+                "id": "once_cell 1.17.0",
                 "target": "once_cell"
               }
             ]
@@ -760,7 +760,7 @@
               "target": "lock_api"
             },
             {
-              "id": "once_cell 1.16.0",
+              "id": "once_cell 1.17.0",
               "target": "once_cell"
             },
             {
@@ -904,7 +904,7 @@
               "target": "dissimilar"
             },
             {
-              "id": "once_cell 1.16.0",
+              "id": "once_cell 1.17.0",
               "target": "once_cell"
             }
           ],
@@ -971,7 +971,7 @@
               "target": "indenter"
             },
             {
-              "id": "once_cell 1.16.0",
+              "id": "once_cell 1.17.0",
               "target": "once_cell"
             }
           ],
@@ -1952,13 +1952,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "once_cell 1.16.0": {
+    "once_cell 1.17.0": {
       "name": "once_cell",
-      "version": "1.16.0",
+      "version": "1.17.0",
       "repository": {
         "Http": {
-          "url": "https://crates.io/api/v1/crates/once_cell/1.16.0/download",
-          "sha256": "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860"
+          "url": "https://crates.io/api/v1/crates/once_cell/1.17.0/download",
+          "sha256": "6f61fba1741ea2b3d6a1e3178721804bb716a68a6aeba1149b5d52e3d464ea66"
         }
       },
       "targets": [
@@ -1987,7 +1987,7 @@
           "std"
         ],
         "edition": "2021",
-        "version": "1.16.0"
+        "version": "1.17.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -2594,9 +2594,9 @@
       "version": "0.1.0",
       "repository": {
         "Git": {
-          "remote": "https://github.com/manapointer/salsa",
+          "remote": "https://github.com/salsa-rs/salsa",
           "commitish": {
-            "Rev": "f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7"
+            "Rev": "20c7834ff34fd00a41b59bec61f3d5c85ea3abd4"
           },
           "shallow_since": "1669697685 +0000",
           "strip_prefix": "components/salsa-2022"
@@ -2685,9 +2685,9 @@
       "version": "0.1.0",
       "repository": {
         "Git": {
-          "remote": "https://github.com/manapointer/salsa",
+          "remote": "https://github.com/salsa-rs/salsa",
           "commitish": {
-            "Rev": "f1a775c355e8e1f0614966cc7c80d3ce4dd12fd7"
+            "Rev": "20c7834ff34fd00a41b59bec61f3d5c85ea3abd4"
           },
           "shallow_since": "1669697685 +0000",
           "strip_prefix": "components/salsa-2022-macros"

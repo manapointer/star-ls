@@ -431,7 +431,7 @@ impl AstNode for Expr {
                 LIST_COMP => Expr::ListComp(ListComp { syntax }),
                 DICT_EXPR => Expr::DictExpr(DictExpr { syntax }),
                 DICT_COMP => Expr::DictComp(DictComp { syntax }),
-                LITERAL => Expr::Literal(Literal { syntax }),
+                // LITERAL => Expr::Literal(Literal { syntax }),
                 _ => unreachable!(),
             })
         } else {
