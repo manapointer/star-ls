@@ -9,8 +9,6 @@ use runfiles::find_runfiles_dir;
 use crate::{parse_file, render};
 
 fn project_root() -> PathBuf {
-    eprintln!("whoa: {}", find_runfiles_dir().unwrap().display());
-
     find_runfiles_dir()
         .map(|p| p.join("star-ls"))
         .unwrap_or_else(|_| {
@@ -37,7 +35,7 @@ fn collect_star_files(
     for entry in fs::read_dir(&ok_dir)?.chain(fs::read_dir(&err_dir)?) {
         let entry = entry?;
         let path = entry.path();
-        if path.extension().unwrap_or_default() != "star" || !entry.file_type()?.is_file() {
+        if path.extension().unwrap_or_default() != "star" || entry.file_type()?.is_dir() {
             continue;
         }
         // Filter tests.
