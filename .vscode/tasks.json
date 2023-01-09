@@ -4,13 +4,14 @@
         {
             "label": "Build Extension",
             "group": "build",
-            "type": "npm",
-            "script": "build",
-            "path": "editors/code/",
-            "problemMatcher": {
-                "base": "$tsc",
-                "fileLocation": ["relative", "${workspaceFolder}/editors/code"]
-            },
+            "type": "shell",
+            "command": "bazel run //editors/code:dist"
+        },
+        {
+            "label": "Build Extension in Background",
+            "group": "build",
+            "type": "shell",
+            "command": "ibazel run //editors/code:dist"
         },
         {
             "label": "Build Server",
