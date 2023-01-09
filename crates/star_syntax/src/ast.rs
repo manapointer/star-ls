@@ -68,6 +68,19 @@ macro_rules! def_ast_token {
     };
 }
 
+macro_rules! access_nth_node {
+    ($ty:ty, $name:ident) => {
+        pub fn $name(&self) -> Option<$ty> {
+            child(self.syntax())
+        }
+    };
+    ($ty:ty, $name:ident, $pos:expr) => {
+        pub fn $name(&self) -> Option<$ty> {
+            children(self.syntax()).nth($pos)
+        }
+    };
+}
+
 pub trait AstNode {
     fn can_cast(kind: SyntaxKind) -> bool
     where
@@ -239,24 +252,14 @@ impl DefStmt {
         child_token(self.syntax())
     }
 
-    pub fn parameters(&self) -> Option<Parameters> {
-        child(self.syntax())
-    }
-
-    pub fn suite(&self) -> Option<Suite> {
-        child(self.syntax())
-    }
+    access_nth_node!(Parameters, parameters);
+    access_nth_node!(Suite, suite);
 }
 
 def_ast_node!(IfStmt, IF_STMT);
 impl IfStmt {
-    pub fn if_condition(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
-
-    pub fn if_suite(&self) -> Option<Suite> {
-        child(self.syntax())
-    }
+    access_nth_node!(Expr, if_condition);
+    access_nth_node!(Suite, if_suite);
 
     pub fn elif_conditions(&self) -> Vec<Expr> {
         self.syntax()
@@ -297,9 +300,7 @@ impl ForStmt {
         child_after_token(self.syntax(), T![in])
     }
 
-    pub fn suite(&self) -> Option<Suite> {
-        child(self.syntax())
-    }
+    access_nth_node!(Suite, suite);
 }
 
 def_ast_node!(SimpleStmt, SIMPLE_STMT);
@@ -401,9 +402,7 @@ impl AstNode for SmallStmt {
 
 def_ast_node!(ReturnStmt, RETURN_STMT);
 impl ReturnStmt {
-    pub fn expr(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
+    access_nth_node!(Expr, expr);
 }
 
 def_ast_node!(BreakStmt, BREAK_STMT);
@@ -417,25 +416,12 @@ impl PassStmt {}
 
 def_ast_node!(AssignStmt, ASSIGN_STMT);
 impl AssignStmt {
-    pub fn lhs(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
-
-    pub fn rhs(&self) -> Option<Expr> {
-        children(self.syntax()).nth(1)
-    }
+    access_nth_node!(Expr, lhs);
+    access_nth_node!(Expr, rhs, 1);
 }
 
 def_ast_node!(LoadStmt, LOAD_STMT);
-impl LoadStmt {
-    pub fn lhs(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
-
-    pub fn rhs(&self) -> Option<Expr> {
-        children(self.syntax()).nth(1)
-    }
-}
+impl LoadStmt {}
 
 pub enum Expr {
     IfExpr(IfExpr),
@@ -547,9 +533,7 @@ impl IfExpr {
         children(self.syntax()).nth(1)
     }
 
-    pub fn then_expr(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
+    access_nth_node!(Expr, then_expr);
 
     pub fn else_expr(&self) -> Option<Expr> {
         children(self.syntax()).nth(2)
@@ -558,9 +542,7 @@ impl IfExpr {
 
 def_ast_node!(UnaryExpr, UNARY_EXPR);
 impl UnaryExpr {
-    pub fn expr(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
+    access_nth_node!(Expr, expr);
 
     pub fn op_kind(&self) -> Option<UnaryOp> {
         let kind = match self.op_token()?.kind() {
@@ -580,13 +562,8 @@ impl UnaryExpr {
 
 def_ast_node!(BinaryExpr, BINARY_EXPR);
 impl BinaryExpr {
-    pub fn lhs(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
-
-    pub fn rhs(&self) -> Option<Expr> {
-        children(self.syntax()).nth(1)
-    }
+    access_nth_node!(Expr, lhs);
+    access_nth_node!(Expr, rhs, 1);
 
     pub fn op_details(&self) -> Option<(SyntaxToken, BinaryOp)> {
         self.syntax()
@@ -638,20 +615,13 @@ impl TupleExpr {
 
 def_ast_node!(LambdaExpr, LAMBDA_EXPR);
 impl LambdaExpr {
-    pub fn parameters(&self) -> Option<Parameters> {
-        child(self.syntax())
-    }
-
-    pub fn suite(&self) -> Option<Suite> {
-        child(self.syntax())
-    }
+    access_nth_node!(Parameters, parameters);
+    access_nth_node!(Suite, suite);
 }
 
 def_ast_node!(DotExpr, DOT_EXPR);
 impl DotExpr {
-    pub fn expr(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
+    access_nth_node!(Expr, expr);
 
     pub fn ident(&self) -> Option<Ident> {
         child_token(self.syntax())
@@ -660,9 +630,7 @@ impl DotExpr {
 
 def_ast_node!(CallExpr, CALL_EXPR);
 impl CallExpr {
-    pub fn expr(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
+    access_nth_node!(Expr, expr);
 
     pub fn arguments(&self) -> Option<Arguments> {
         child(self.syntax())
@@ -671,21 +639,10 @@ impl CallExpr {
 
 def_ast_node!(SliceExpr, SLICE_EXPR);
 impl SliceExpr {
-    pub fn expr(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
-
-    pub fn start(&self) -> Option<Expr> {
-        children(self.syntax()).nth(1)
-    }
-
-    pub fn end(&self) -> Option<Expr> {
-        children(self.syntax()).nth(2)
-    }
-
-    pub fn step(&self) -> Option<Expr> {
-        children(self.syntax()).nth(3)
-    }
+    access_nth_node!(Expr, expr);
+    access_nth_node!(Expr, start, 1);
+    access_nth_node!(Expr, end, 2);
+    access_nth_node!(Expr, step, 3);
 }
 
 def_ast_node!(ListExpr, LIST_EXPR);
@@ -697,9 +654,7 @@ impl ListExpr {
 
 def_ast_node!(ListComp, LIST_COMP);
 impl ListComp {
-    pub fn expr(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
+    access_nth_node!(Expr, expr);
 
     pub fn comp_clauses(&self) -> Vec<CompClause> {
         children(self.syntax()).collect()
@@ -708,16 +663,12 @@ impl ListComp {
 
 def_ast_node!(DictExpr, DICT_EXPR);
 impl DictExpr {
-    pub fn entries(&self) -> Option<Entries> {
-        child(self.syntax())
-    }
+    access_nth_node!(Entries, entries);
 }
 
 def_ast_node!(DictComp, DICT_COMP);
 impl DictComp {
-    pub fn expr(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
+    access_nth_node!(Expr, expr);
 
     pub fn comp_clauses(&self) -> Vec<CompClause> {
         children(self.syntax()).collect()
@@ -731,10 +682,7 @@ pub enum LiteralKind {
     String(String),
 }
 
-pub struct Literal {
-    syntax: SyntaxNode,
-}
-
+def_ast_node!(Literal, LITERAL);
 impl Literal {
     pub fn token(&self) -> SyntaxToken {
         self.syntax()
@@ -760,30 +708,6 @@ impl Literal {
         }
 
         unreachable!()
-    }
-}
-
-impl fmt::Display for Literal {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for Literal {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == LITERAL
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
     }
 }
 
@@ -852,9 +776,7 @@ impl Parameter {
             .find_map(Ident::cast)
     }
 
-    pub fn default(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
+    access_nth_node!(Expr, default);
 }
 
 def_ast_node!(Arguments, ARGUMENTS);
@@ -886,9 +808,7 @@ impl Argument {
             .find_map(Ident::cast)
     }
 
-    pub fn value(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
+    access_nth_node!(Expr, value);
 }
 
 def_ast_node!(Suite, SUITE);
