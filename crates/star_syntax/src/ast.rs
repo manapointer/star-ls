@@ -68,7 +68,7 @@ macro_rules! def_ast_token {
     };
 }
 
-macro_rules! access_nth_node {
+macro_rules! access_nth_child {
     ($ty:ty, $name:ident) => {
         pub fn $name(&self) -> Option<$ty> {
             child(self.syntax())
@@ -77,6 +77,14 @@ macro_rules! access_nth_node {
     ($ty:ty, $name:ident, $pos:expr) => {
         pub fn $name(&self) -> Option<$ty> {
             children(self.syntax()).nth($pos)
+        }
+    };
+}
+
+macro_rules! access_children {
+    ($ty:ty, $name:ident) => {
+        pub fn $name(&self) -> Vec<$ty> {
+            children(self.syntax()).collect()
         }
     };
 }
@@ -252,14 +260,14 @@ impl DefStmt {
         child_token(self.syntax())
     }
 
-    access_nth_node!(Parameters, parameters);
-    access_nth_node!(Suite, suite);
+    access_nth_child!(Parameters, parameters);
+    access_nth_child!(Suite, suite);
 }
 
 def_ast_node!(IfStmt, IF_STMT);
 impl IfStmt {
-    access_nth_node!(Expr, if_condition);
-    access_nth_node!(Suite, if_suite);
+    access_nth_child!(Expr, if_condition);
+    access_nth_child!(Suite, if_suite);
 
     pub fn elif_conditions(&self) -> Vec<Expr> {
         self.syntax()
@@ -300,14 +308,12 @@ impl ForStmt {
         child_after_token(self.syntax(), T![in])
     }
 
-    access_nth_node!(Suite, suite);
+    access_nth_child!(Suite, suite);
 }
 
 def_ast_node!(SimpleStmt, SIMPLE_STMT);
 impl SimpleStmt {
-    pub fn statements(&self) -> Vec<SmallStmt> {
-        children(self.syntax()).collect()
-    }
+    access_children!(SmallStmt, statements);
 }
 
 pub enum SmallStmt {
@@ -402,7 +408,7 @@ impl AstNode for SmallStmt {
 
 def_ast_node!(ReturnStmt, RETURN_STMT);
 impl ReturnStmt {
-    access_nth_node!(Expr, expr);
+    access_nth_child!(Expr, expr);
 }
 
 def_ast_node!(BreakStmt, BREAK_STMT);
@@ -416,8 +422,8 @@ impl PassStmt {}
 
 def_ast_node!(AssignStmt, ASSIGN_STMT);
 impl AssignStmt {
-    access_nth_node!(Expr, lhs);
-    access_nth_node!(Expr, rhs, 1);
+    access_nth_child!(Expr, lhs);
+    access_nth_child!(Expr, rhs, 1);
 }
 
 def_ast_node!(LoadStmt, LOAD_STMT);
@@ -533,7 +539,7 @@ impl IfExpr {
         children(self.syntax()).nth(1)
     }
 
-    access_nth_node!(Expr, then_expr);
+    access_nth_child!(Expr, then_expr);
 
     pub fn else_expr(&self) -> Option<Expr> {
         children(self.syntax()).nth(2)
@@ -542,7 +548,7 @@ impl IfExpr {
 
 def_ast_node!(UnaryExpr, UNARY_EXPR);
 impl UnaryExpr {
-    access_nth_node!(Expr, expr);
+    access_nth_child!(Expr, expr);
 
     pub fn op_kind(&self) -> Option<UnaryOp> {
         let kind = match self.op_token()?.kind() {
@@ -562,8 +568,8 @@ impl UnaryExpr {
 
 def_ast_node!(BinaryExpr, BINARY_EXPR);
 impl BinaryExpr {
-    access_nth_node!(Expr, lhs);
-    access_nth_node!(Expr, rhs, 1);
+    access_nth_child!(Expr, lhs);
+    access_nth_child!(Expr, rhs, 1);
 
     pub fn op_details(&self) -> Option<(SyntaxToken, BinaryOp)> {
         self.syntax()
@@ -615,13 +621,13 @@ impl TupleExpr {
 
 def_ast_node!(LambdaExpr, LAMBDA_EXPR);
 impl LambdaExpr {
-    access_nth_node!(Parameters, parameters);
-    access_nth_node!(Suite, suite);
+    access_nth_child!(Parameters, parameters);
+    access_nth_child!(Suite, suite);
 }
 
 def_ast_node!(DotExpr, DOT_EXPR);
 impl DotExpr {
-    access_nth_node!(Expr, expr);
+    access_nth_child!(Expr, expr);
 
     pub fn ident(&self) -> Option<Ident> {
         child_token(self.syntax())
@@ -630,7 +636,7 @@ impl DotExpr {
 
 def_ast_node!(CallExpr, CALL_EXPR);
 impl CallExpr {
-    access_nth_node!(Expr, expr);
+    access_nth_child!(Expr, expr);
 
     pub fn arguments(&self) -> Option<Arguments> {
         child(self.syntax())
@@ -639,40 +645,32 @@ impl CallExpr {
 
 def_ast_node!(SliceExpr, SLICE_EXPR);
 impl SliceExpr {
-    access_nth_node!(Expr, expr);
-    access_nth_node!(Expr, start, 1);
-    access_nth_node!(Expr, end, 2);
-    access_nth_node!(Expr, step, 3);
+    access_nth_child!(Expr, expr);
+    access_nth_child!(Expr, start, 1);
+    access_nth_child!(Expr, end, 2);
+    access_nth_child!(Expr, step, 3);
 }
 
 def_ast_node!(ListExpr, LIST_EXPR);
 impl ListExpr {
-    pub fn elements(&self) -> Vec<Expr> {
-        children(self.syntax()).collect()
-    }
+    access_children!(Expr, elements);
 }
 
 def_ast_node!(ListComp, LIST_COMP);
 impl ListComp {
-    access_nth_node!(Expr, expr);
-
-    pub fn comp_clauses(&self) -> Vec<CompClause> {
-        children(self.syntax()).collect()
-    }
+    access_nth_child!(Expr, expr);
+    access_children!(CompClause, comp_clauses);
 }
 
 def_ast_node!(DictExpr, DICT_EXPR);
 impl DictExpr {
-    access_nth_node!(Entries, entries);
+    access_nth_child!(Entries, entries);
 }
 
 def_ast_node!(DictComp, DICT_COMP);
 impl DictComp {
-    access_nth_node!(Expr, expr);
-
-    pub fn comp_clauses(&self) -> Vec<CompClause> {
-        children(self.syntax()).collect()
-    }
+    access_nth_child!(Expr, expr);
+    access_children!(CompClause, comp_clauses);
 }
 
 pub enum LiteralKind {
@@ -724,23 +722,17 @@ impl CompFor {
 
 def_ast_node!(CompIf, LIST_COMP_IF);
 impl CompIf {
-    pub fn expr(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
+    access_nth_child!(Expr, expr);
 }
 
 def_ast_node!(Entries, ENTRIES);
 impl Entries {
-    pub fn entries(&self) -> Vec<Entries> {
-        children(self.syntax()).collect()
-    }
+    access_children!(Entries, entries);
 }
 
 def_ast_node!(Entry, ENTRY);
 impl Entry {
-    pub fn key(&self) -> Option<Expr> {
-        child(self.syntax())
-    }
+    access_nth_child!(Expr, key);
 
     pub fn value(&self) -> Option<Expr> {
         child_after_token(self.syntax(), T![:])
@@ -749,9 +741,7 @@ impl Entry {
 
 def_ast_node!(Parameters, PARAMETERS);
 impl Parameters {
-    pub fn parameters(&self) -> AstChildren<Parameter> {
-        children(self.syntax())
-    }
+    access_children!(Parameter, parameters);
 }
 
 def_ast_node!(Parameter, PARAMETER);
@@ -776,14 +766,12 @@ impl Parameter {
             .find_map(Ident::cast)
     }
 
-    access_nth_node!(Expr, default);
+    access_nth_child!(Expr, default);
 }
 
 def_ast_node!(Arguments, ARGUMENTS);
 impl Arguments {
-    pub fn arguments(&self) -> AstChildren<Argument> {
-        children(self.syntax())
-    }
+    access_children!(Argument, arguments);
 }
 
 def_ast_node!(Argument, ARGUMENT);
@@ -808,15 +796,12 @@ impl Argument {
             .find_map(Ident::cast)
     }
 
-    access_nth_node!(Expr, value);
+    access_nth_child!(Expr, value);
 }
 
 def_ast_node!(Suite, SUITE);
 impl Suite {
-    pub fn statements(&self) -> Vec<Stmt> {
-        children(self.syntax()).collect()
-    }
-
+    access_children!(Stmt, statements);
     // pub fn simple_stmt(&self) -> Option<>
 }
 
