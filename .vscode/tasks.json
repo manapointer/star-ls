@@ -4,14 +4,16 @@
         {
             "label": "Build Extension",
             "group": "build",
-            "type": "shell",
-            "command": "bazel run //editors/code:dist"
+            "type": "npm",
+            "script": "build",
+            "path": "editors/code/",
         },
         {
             "label": "Build Extension in Background",
             "group": "build",
-            "type": "shell",
-            "command": "ibazel run //editors/code:dist"
+            "type": "npm",
+            "script": "watch",
+            "path": "editors/code/",
         },
         {
             "label": "Build Server",
