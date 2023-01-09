@@ -4,6 +4,38 @@ use crate::{
 };
 use std::{fmt, marker::PhantomData};
 
+macro_rules! def_ast_node {
+    ($name:ident, $kinds:pat) => {
+        pub struct $name {
+            syntax: SyntaxNode,
+        }
+
+        impl fmt::Display for $name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                fmt::Display::fmt(self.syntax(), f)
+            }
+        }
+
+        impl AstNode for $name {
+            fn can_cast(kind: SyntaxKind) -> bool {
+                matches!(kind, $kinds)
+            }
+
+            fn cast(syntax: SyntaxNode) -> Option<Self> {
+                if Self::can_cast(syntax.kind()) {
+                    Some(Self { syntax })
+                } else {
+                    None
+                }
+            }
+
+            fn syntax(&self) -> &SyntaxNode {
+                &self.syntax
+            }
+        }
+    };
+}
+
 pub trait AstNode {
     fn can_cast(kind: SyntaxKind) -> bool
     where
@@ -169,10 +201,7 @@ impl AstNode for Stmt {
     }
 }
 
-pub struct DefStmt {
-    syntax: SyntaxNode,
-}
-
+def_ast_node!(DefStmt, DEF_STMT);
 impl DefStmt {
     pub fn name(&self) -> Option<Ident> {
         child_token(self.syntax())
@@ -187,34 +216,7 @@ impl DefStmt {
     }
 }
 
-impl fmt::Display for DefStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for DefStmt {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == DEF_STMT
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct IfStmt {
-    syntax: SyntaxNode,
-}
-
+def_ast_node!(IfStmt, IF_STMT);
 impl IfStmt {
     pub fn if_condition(&self) -> Option<Expr> {
         child(self.syntax())
@@ -253,34 +255,7 @@ impl IfStmt {
     }
 }
 
-impl fmt::Display for IfStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for IfStmt {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == IF_STMT
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct ForStmt {
-    syntax: SyntaxNode,
-}
-
+def_ast_node!(ForStmt, FOR_STMT);
 impl ForStmt {
     pub fn loop_variables(&self) -> Vec<Expr> {
         children_until_token(self.syntax(), T![in]).collect()
@@ -295,61 +270,10 @@ impl ForStmt {
     }
 }
 
-impl fmt::Display for ForStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for ForStmt {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == FOR_STMT
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct SimpleStmt {
-    syntax: SyntaxNode,
-}
-
+def_ast_node!(SimpleStmt, SIMPLE_STMT);
 impl SimpleStmt {
     pub fn statements(&self) -> Vec<SmallStmt> {
         children(self.syntax()).collect()
-    }
-}
-
-impl fmt::Display for SimpleStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for SimpleStmt {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == SIMPLE_STMT
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
     }
 }
 
@@ -443,134 +367,23 @@ impl AstNode for SmallStmt {
     }
 }
 
-pub struct ReturnStmt {
-    syntax: SyntaxNode,
-}
-
+def_ast_node!(ReturnStmt, RETURN_STMT);
 impl ReturnStmt {
     pub fn expr(&self) -> Option<Expr> {
         child(self.syntax())
     }
 }
 
-impl fmt::Display for ReturnStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for ReturnStmt {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == RETURN_STMT
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct BreakStmt {
-    syntax: SyntaxNode,
-}
-
+def_ast_node!(BreakStmt, BREAK_STMT);
 impl BreakStmt {}
 
-impl fmt::Display for BreakStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for BreakStmt {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == BREAK_STMT
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct ContinueStmt {
-    syntax: SyntaxNode,
-}
-
+def_ast_node!(ContinueStmt, CONTINUE_STMT);
 impl ContinueStmt {}
 
-impl fmt::Display for ContinueStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for ContinueStmt {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == CONTINUE_STMT
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct PassStmt {
-    syntax: SyntaxNode,
-}
-
+def_ast_node!(PassStmt, PASS_STMT);
 impl PassStmt {}
 
-impl fmt::Display for PassStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for PassStmt {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == PASS_STMT
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct AssignStmt {
-    syntax: SyntaxNode,
-}
-
+def_ast_node!(AssignStmt, ASSIGN_STMT);
 impl AssignStmt {
     pub fn lhs(&self) -> Option<Expr> {
         child(self.syntax())
@@ -581,34 +394,7 @@ impl AssignStmt {
     }
 }
 
-impl fmt::Display for AssignStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for AssignStmt {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == ASSIGN_STMT
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct LoadStmt {
-    syntax: SyntaxNode,
-}
-
+def_ast_node!(LoadStmt, LOAD_STMT);
 impl LoadStmt {
     pub fn lhs(&self) -> Option<Expr> {
         child(self.syntax())
@@ -616,30 +402,6 @@ impl LoadStmt {
 
     pub fn rhs(&self) -> Option<Expr> {
         children(self.syntax()).nth(1)
-    }
-}
-
-impl fmt::Display for LoadStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for LoadStmt {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == LOAD_STMT
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
     }
 }
 
@@ -747,10 +509,7 @@ impl AstNode for Expr {
     }
 }
 
-pub struct IfExpr {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(IfExpr, IF_EXPR);
 impl IfExpr {
     pub fn condition(&self) -> Option<Expr> {
         children(self.syntax()).nth(1)
@@ -765,34 +524,7 @@ impl IfExpr {
     }
 }
 
-impl fmt::Display for IfExpr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for IfExpr {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == IF_EXPR
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct UnaryExpr {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(UnaryExpr, UNARY_EXPR);
 impl UnaryExpr {
     pub fn expr(&self) -> Option<Expr> {
         child(self.syntax())
@@ -814,34 +546,7 @@ impl UnaryExpr {
     }
 }
 
-impl fmt::Display for UnaryExpr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for UnaryExpr {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == UNARY_EXPR
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct BinaryExpr {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(BinaryExpr, BINARY_EXPR);
 impl BinaryExpr {
     pub fn lhs(&self) -> Option<Expr> {
         child(self.syntax())
@@ -892,68 +597,14 @@ impl BinaryExpr {
     }
 }
 
-impl fmt::Display for BinaryExpr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for BinaryExpr {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == BINARY_EXPR
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct TupleExpr {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(TupleExpr, TUPLE_EXPR);
 impl TupleExpr {
     pub fn exprs(&self) -> AstChildren<Expr> {
         children(self.syntax())
     }
 }
 
-impl fmt::Display for TupleExpr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for TupleExpr {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == TUPLE_EXPR
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct LambdaExpr {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(LambdaExpr, LAMBDA_EXPR);
 impl LambdaExpr {
     pub fn parameters(&self) -> Option<Parameters> {
         child(self.syntax())
@@ -964,34 +615,7 @@ impl LambdaExpr {
     }
 }
 
-impl fmt::Display for LambdaExpr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for LambdaExpr {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == LAMBDA_EXPR
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct DotExpr {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(DotExpr, DOT_EXPR);
 impl DotExpr {
     pub fn expr(&self) -> Option<Expr> {
         child(self.syntax())
@@ -1002,34 +626,7 @@ impl DotExpr {
     }
 }
 
-impl fmt::Display for DotExpr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for DotExpr {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == DOT_EXPR
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct CallExpr {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(CallExpr, CALL_EXPR);
 impl CallExpr {
     pub fn expr(&self) -> Option<Expr> {
         child(self.syntax())
@@ -1040,34 +637,7 @@ impl CallExpr {
     }
 }
 
-impl fmt::Display for CallExpr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for CallExpr {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == CALL_EXPR
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct SliceExpr {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(SliceExpr, SLICE_EXPR);
 impl SliceExpr {
     pub fn expr(&self) -> Option<Expr> {
         child(self.syntax())
@@ -1086,68 +656,14 @@ impl SliceExpr {
     }
 }
 
-impl fmt::Display for SliceExpr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for SliceExpr {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == SLICE_EXPR
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct ListExpr {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(ListExpr, LIST_EXPR);
 impl ListExpr {
     pub fn elements(&self) -> Vec<Expr> {
         children(self.syntax()).collect()
     }
 }
 
-impl fmt::Display for ListExpr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for ListExpr {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == LIST_EXPR
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct ListComp {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(ListComp, LIST_COMP);
 impl ListComp {
     pub fn expr(&self) -> Option<Expr> {
         child(self.syntax())
@@ -1158,68 +674,14 @@ impl ListComp {
     }
 }
 
-impl fmt::Display for ListComp {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for ListComp {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == LIST_COMP
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct DictExpr {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(DictExpr, DICT_EXPR);
 impl DictExpr {
     pub fn entries(&self) -> Option<Entries> {
         child(self.syntax())
     }
 }
 
-impl fmt::Display for DictExpr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for DictExpr {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == DICT_EXPR
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct DictComp {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(DictComp, DICT_COMP);
 impl DictComp {
     pub fn expr(&self) -> Option<Expr> {
         child(self.syntax())
@@ -1227,30 +689,6 @@ impl DictComp {
 
     pub fn comp_clauses(&self) -> Vec<CompClause> {
         children(self.syntax()).collect()
-    }
-}
-
-impl fmt::Display for DictComp {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for DictComp {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == DICT_COMP
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
     }
 }
 
@@ -1317,10 +755,7 @@ impl AstNode for Literal {
     }
 }
 
-pub struct CompFor {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(CompFor, LIST_COMP_FOR);
 impl CompFor {
     pub fn loop_variables(&self) -> Vec<Expr> {
         children_until_token(self.syntax(), T![in]).collect()
@@ -1331,102 +766,21 @@ impl CompFor {
     }
 }
 
-impl fmt::Display for CompFor {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for CompFor {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == LIST_COMP
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct CompIf {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(CompIf, LIST_COMP_IF);
 impl CompIf {
     pub fn expr(&self) -> Option<Expr> {
         child(self.syntax())
     }
 }
 
-impl fmt::Display for CompIf {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for CompIf {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == LIST_COMP_IF
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct Entries {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(Entries, ENTRIES);
 impl Entries {
     pub fn entries(&self) -> Vec<Entries> {
         children(self.syntax()).collect()
     }
 }
 
-impl fmt::Display for Entries {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for Entries {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == ENTRIES
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct Entry {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(Entry, ENTRY);
 impl Entry {
     pub fn key(&self) -> Option<Expr> {
         child(self.syntax())
@@ -1434,30 +788,6 @@ impl Entry {
 
     pub fn value(&self) -> Option<Expr> {
         child_after_token(self.syntax(), T![:])
-    }
-}
-
-impl fmt::Display for Entry {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for Entry {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == ENTRY
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
     }
 }
 
