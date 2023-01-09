@@ -18,6 +18,7 @@ ts_project(
         out_dir = "dist",
         root_dir = "src",
         source_maps = "true",
+        swcrc = ":.swcrc",
     ),
     deps = [
         ":node_modules/@types/node",
