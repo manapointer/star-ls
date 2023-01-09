@@ -25,7 +25,7 @@ pub(crate) fn simple_stmt(p: &mut Parser) {
     }
     p.eat(T![;]);
     if !p.at(EOF) && !p.at(T!['\n']) {
-        p.error(&format!("unexpected token: {:?}", p.current()));
+        p.error_unexpected(p.current());
         p.error_and_recover(RECOVERY_SET);
     }
     p.eat(T!['\n']);
@@ -40,7 +40,7 @@ pub(crate) fn small_stmt(p: &mut Parser) {
         T![pass] => pass_stmt(p),
         kind if EXPR_START.contains(kind) => expr_or_assign_stmt(p),
         _ => {
-            p.error(&format!("unexpected token: {:?}", p.current()));
+            p.error_unexpected(p.current());
             p.bump_any();
         }
     }

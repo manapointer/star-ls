@@ -30,19 +30,27 @@ pub(crate) fn expression_or_tuple(p: &mut Parser, parens: bool, force_expr_list:
             return 0;
         }
     }
+    if !test(p, true) {
+        p.error_unexpected(p.current());
+        p.error_and_recover(RECOVERY_SET);
+        return 0;
+    }
     let mut len = 1;
-    test(p, true);
     while p.at(T![,]) && EXPR_START.contains(p.nth(1)) {
         if !did_checkpoint && !force_expr_list {
             did_checkpoint = true;
             p.enter_at(checkpoint, TUPLE_EXPR);
         }
         p.bump(T![,]);
-        test(p, true);
+        if !test(p, true) {
+            p.error_unexpected(p.current());
+            p.error_and_recover(RECOVERY_SET);
+        }
         len += 1;
     }
 
     // test_err tuple_expr_invalid
+    // (1,,)
     // 1, 1,
     // (1, 2 def
     if parens {
@@ -306,19 +314,17 @@ pub(crate) fn primary_expr(p: &mut Parser) -> bool {
                     // Parse slice.
                     p.bump(T![:]);
 
-                    if EXPR_START.contains(p.current()) {
-                        test(p, true);
-                    }
+                    // if EXPR_START.contains(p.current()) {
+                    //     test(p, true);
+                    // }
 
-                    if p.eat(T![:]) && EXPR_START.contains(p.current()) {
-                        test(p, true);
-                    }
+                    // if p.eat(T![:]) && EXPR_START.contains(p.current()) {
+                    //     test(p, true);
+                    // }
 
-                    if !p.expect(T![:]) {
-                        p.error("expected closing ']'");
-                        // TODO: Recover to closing brace?
-                        p.exit();
-                    }
+                    // if !p.expect(T![']']) {
+                    //     p.exit();
+                    // }
                 }
                 _ => break true,
             }

@@ -210,6 +210,10 @@ impl<'a> Parser<'a> {
         self.input_pos += len;
     }
 
+    fn error_unexpected(&mut self, kind: SyntaxKind) {
+        self.error(&format!("unexpected token: {:?}", kind));
+    }
+
     fn error(&mut self, msg: &str) {
         self.errors
             .push(Diagnostic::new(msg.to_string(), self.input_pos))
