@@ -36,6 +36,38 @@ macro_rules! def_ast_node {
     };
 }
 
+macro_rules! def_ast_token {
+    ($name:ident, $kinds:pat) => {
+        pub struct $name {
+            syntax: SyntaxToken,
+        }
+
+        impl fmt::Display for $name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                fmt::Display::fmt(self.syntax(), f)
+            }
+        }
+
+        impl AstToken for $name {
+            fn can_cast(kind: SyntaxKind) -> bool {
+                matches!(kind, $kinds)
+            }
+
+            fn cast(syntax: SyntaxToken) -> Option<Self> {
+                if Self::can_cast(syntax.kind()) {
+                    Some(Self { syntax })
+                } else {
+                    None
+                }
+            }
+
+            fn syntax(&self) -> &SyntaxToken {
+                &self.syntax
+            }
+        }
+    };
+}
+
 pub trait AstNode {
     fn can_cast(kind: SyntaxKind) -> bool
     where
@@ -791,44 +823,14 @@ impl Entry {
     }
 }
 
-pub struct Parameters {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(Parameters, PARAMETERS);
 impl Parameters {
     pub fn parameters(&self) -> AstChildren<Parameter> {
         children(self.syntax())
     }
 }
 
-impl fmt::Display for Parameters {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for Parameters {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == PARAMETERS
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct Parameter {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(Parameter, PARAMETER);
 impl Parameter {
     pub fn kind(&self) -> ParameterKind {
         match self
@@ -855,68 +857,14 @@ impl Parameter {
     }
 }
 
-impl fmt::Display for Parameter {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for Parameter {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == PARAMETER
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct Arguments {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(Arguments, ARGUMENTS);
 impl Arguments {
     pub fn arguments(&self) -> AstChildren<Argument> {
         children(self.syntax())
     }
 }
 
-impl fmt::Display for Arguments {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for Arguments {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == ARGUMENTS
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct Argument {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(Argument, ARGUMENT);
 impl Argument {
     pub fn kind(&self) -> ArgumentKind {
         match self
@@ -943,34 +891,7 @@ impl Argument {
     }
 }
 
-impl fmt::Display for Argument {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for Argument {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == ARGUMENT
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct Suite {
-    pub(crate) syntax: SyntaxNode,
-}
-
+def_ast_node!(Suite, SUITE);
 impl Suite {
     pub fn statements(&self) -> Vec<Stmt> {
         children(self.syntax()).collect()
@@ -979,141 +900,10 @@ impl Suite {
     // pub fn simple_stmt(&self) -> Option<>
 }
 
-impl fmt::Display for Suite {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(self.syntax(), f)
-    }
-}
-
-impl AstNode for Suite {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == SUITE
-    }
-
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxNode {
-        &self.syntax
-    }
-}
-
-pub struct Ident {
-    pub(crate) syntax: SyntaxToken,
-}
-
-impl fmt::Display for Ident {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.syntax, f)
-    }
-}
-
-impl AstToken for Ident {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == IDENT
-    }
-
-    fn cast(syntax: SyntaxToken) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxToken {
-        &self.syntax
-    }
-}
-
-pub struct Int {
-    pub(crate) syntax: SyntaxToken,
-}
-
-impl fmt::Display for Int {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.syntax, f)
-    }
-}
-
-impl AstToken for Int {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == INT
-    }
-
-    fn cast(syntax: SyntaxToken) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxToken {
-        &self.syntax
-    }
-}
-
-pub struct Float {
-    pub(crate) syntax: SyntaxToken,
-}
-
-impl fmt::Display for Float {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.syntax, f)
-    }
-}
-
-impl AstToken for Float {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == FLOAT
-    }
-
-    fn cast(syntax: SyntaxToken) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxToken {
-        &self.syntax
-    }
-}
-
-pub struct String {
-    pub(crate) syntax: SyntaxToken,
-}
-
-impl fmt::Display for String {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.syntax, f)
-    }
-}
-
-impl AstToken for String {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        kind == STRING
-    }
-
-    fn cast(syntax: SyntaxToken) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-
-    fn syntax(&self) -> &SyntaxToken {
-        &self.syntax
-    }
-}
+def_ast_token!(Ident, IDENT);
+def_ast_token!(Int, INT);
+def_ast_token!(Float, FLOAT);
+def_ast_token!(String, STRING);
 
 #[derive(Debug, Clone)]
 pub struct AstChildren<N: AstNode> {
