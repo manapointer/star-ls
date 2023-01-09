@@ -1,0 +1,24 @@
+ FILE@0..18
+  SIMPLE_STMT@0..18
+    CALL_EXPR@0..9
+      LITERAL@0..3
+        IDENT@0..3 "foo"
+      L_PAREN@3..4 "("
+      ARGUMENTS@4..8
+        ARGUMENT@4..5
+          LITERAL@4..5
+            INT@4..5 "1"
+        COMMA@5..6 ","
+        WHITESPACE@6..7 " "
+        ARGUMENT@7..8
+          LITERAL@7..8
+            INT@7..8 "2"
+      COMMA@8..9 ","
+    WHITESPACE@9..10 " "
+    ERROR@10..18
+      DEF_KW@10..13 "def"
+      WHITESPACE@13..14 " "
+      INT@14..17 "123"
+      R_PAREN@17..18 ")"
+    NEWLINE@18..18 ""
+9:expected R_PAREN

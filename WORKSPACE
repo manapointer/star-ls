@@ -110,3 +110,14 @@ swc_register_toolchains(
     name = "swc",
     swc_version = "v1.2.141",
 )
+
+http_archive(
+    name = "aspect_bazel_lib",
+    sha256 = "558d70e36425c317c70b19fb0f68241a3747bcf46561b5ffc19bed17527adbb3",
+    strip_prefix = "bazel-lib-1.20.0",
+    url = "https://github.com/aspect-build/bazel-lib/archive/refs/tags/v1.20.0.tar.gz",
+)
+
+load("@aspect_bazel_lib//lib:repositories.bzl", "aspect_bazel_lib_dependencies")
+
+aspect_bazel_lib_dependencies()

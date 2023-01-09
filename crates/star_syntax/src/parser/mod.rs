@@ -9,7 +9,7 @@ use std::mem;
 
 mod arguments;
 mod expressions;
-mod params;
+mod parameters;
 mod statements;
 mod suite;
 
@@ -18,7 +18,7 @@ mod tests;
 
 use arguments::*;
 use expressions::*;
-use params::*;
+use parameters::*;
 use statements::*;
 use suite::*;
 
@@ -46,7 +46,6 @@ pub(crate) struct Parser<'a> {
     source_pos: usize, // `tokens` position
     state: State,
     input_pos: usize, // position in source file
-    depth: usize,
 }
 
 impl Parse {
@@ -82,7 +81,6 @@ impl<'a> Parser<'a> {
             source_pos: 0,
             state: State::Uninitialized,
             input_pos: 0,
-            depth: 0,
         }
     }
 
@@ -112,6 +110,12 @@ impl<'a> Parser<'a> {
         }
         self.do_bump(kind);
         true
+    }
+
+    fn error_and_recover(&mut self, target: SyntaxKindSet) {
+        self.enter(ERROR);
+        self.eat_until(target);
+        self.exit();
     }
 
     fn eat_until(&mut self, target: SyntaxKindSet) {
@@ -204,6 +208,10 @@ impl<'a> Parser<'a> {
             &self.input[self.input_pos..self.input_pos + len],
         );
         self.input_pos += len;
+    }
+
+    fn error_unexpected(&mut self, kind: SyntaxKind) {
+        self.error(&format!("unexpected token: {:?}", kind));
     }
 
     fn error(&mut self, msg: &str) {

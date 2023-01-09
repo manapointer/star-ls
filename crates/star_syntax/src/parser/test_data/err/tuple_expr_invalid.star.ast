@@ -1,0 +1,27 @@
+ FILE@0..15
+  SIMPLE_STMT@0..6
+    TUPLE_EXPR@0..4
+      LITERAL@0..1
+        INT@0..1 "1"
+      COMMA@1..2 ","
+      WHITESPACE@2..3 " "
+      LITERAL@3..4
+        INT@3..4 "1"
+    ERROR@4..5
+      COMMA@4..5 ","
+    NEWLINE@5..6 "\n"
+  SIMPLE_STMT@6..15
+    TUPLE_EXPR@6..11
+      L_PAREN@6..7 "("
+      LITERAL@7..8
+        INT@7..8 "1"
+      COMMA@8..9 ","
+      WHITESPACE@9..10 " "
+      LITERAL@10..11
+        INT@10..11 "2"
+    WHITESPACE@11..12 " "
+    ERROR@12..15
+      DEF_KW@12..15 "def"
+    NEWLINE@15..15 ""
+4:unexpected token: COMMA
+11:expected R_PAREN

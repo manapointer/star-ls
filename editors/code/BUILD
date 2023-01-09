@@ -1,3 +1,5 @@
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@aspect_bazel_lib//lib:write_source_files.bzl", "write_source_files")
 load("@aspect_rules_swc//swc:defs.bzl", "swc")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@bazel_skylib//lib:partial.bzl", "partial")
@@ -13,7 +15,7 @@ ts_project(
     source_map = True,
     transpiler = partial.make(
         swc,
-        out_dir = "out",
+        out_dir = "dist",
         root_dir = "src",
         source_maps = "true",
     ),
@@ -22,4 +24,17 @@ ts_project(
         ":node_modules/@types/vscode",
         ":node_modules/vscode-languageclient",
     ],
+)
+
+copy_to_directory(
+    name = "swc_cp",
+    srcs = [":swc"],
+    root_paths = ["editors/code/dist"],
+)
+
+write_source_files(
+    name = "dist",
+    files = {
+        "dist": ":swc_cp",
+    },
 )

@@ -1,7 +1,6 @@
 use super::*;
 
-pub(crate) const PARAMETER_START: SyntaxKindSet =
-    EXPR_START.union(SyntaxKindSet::new(&[IDENT, STAR_STAR, STAR]));
+pub(crate) const PARAMETER_START: SyntaxKindSet = SyntaxKindSet::new(&[IDENT, STAR_STAR, STAR]);
 
 // `Parameters = Parameter {',' Parameter}.`
 // test parameters
@@ -10,7 +9,6 @@ pub(crate) const PARAMETER_START: SyntaxKindSet =
 pub(crate) fn parameters(p: &mut Parser) {
     p.enter(PARAMETERS);
     parameter(p);
-
     while !p.at(EOF) && !p.at(T![')']) && !p.at(T![:]) {
         if !(p.at(T![,]) && PARAMETER_START.contains(p.nth(1))) {
             break;
@@ -18,7 +16,6 @@ pub(crate) fn parameters(p: &mut Parser) {
         p.bump(T![,]);
         parameter(p);
     }
-
     p.exit();
 }
 
@@ -31,20 +28,13 @@ pub(crate) fn parameters(p: &mut Parser) {
 //     pass
 pub(crate) fn parameter(p: &mut Parser) {
     p.enter(PARAMETER);
-
     match p.current() {
         T![*] | T![**] => p.bump_any(),
         kind if EXPR_START.contains(kind) => (),
         _ => unreachable!(),
     }
-
-    if p.at(T![ident]) && p.nth_at(1, T![=]) {
-        p.bump(T![ident]);
-        p.bump(T![=]);
-        test(p, true);
-    } else {
+    if p.expect(T![ident]) && p.eat(T![=]) {
         test(p, true);
     }
-
     p.exit();
 }
