@@ -65,7 +65,8 @@
     ]
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "bazel run //editors/code:dist",
+    "check": "echo check",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
